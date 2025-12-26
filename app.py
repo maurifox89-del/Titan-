@@ -1,95 +1,123 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
+import pandas as pd
 
-# --- CONFIGURAZIONE (CORRETTA) ---
-# Streamlit accetta solo "centered" o "wide". 
-# "Centered" è perfetto per lo smartphone.
+# --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="centered")
 
-# --- INIZIALIZZAZIONE DATI (SIMULAZIONE DATABASE) ---
-if 'history_a' not in st.session_state:
-    st.session_state['history_a'] = {
-        "Goblet Squat": 20.0,
-        "Panca Inclinata Manubri": 22.0,
-        "Alzate Laterali": 8.0,
-        "Face Pull": 15.0
+# --- LOGICA TEMPORALE (IL CERVELLO) ---
+# Dizionario per tradurre i giorni in Italiano
+giorni_trad = {
+    "Monday": "Lunedì", "Tuesday": "Martedì", "Wednesday": "Mercoledì",
+    "Thursday": "Giovedì", "Friday": "Venerdì", "Saturday": "Sabato", "Sunday": "Domenica"
+}
+
+# Ottieni il giorno corrente
+giorno_inglese = datetime.now().strftime("%A")
+oggi = giorni_trad[giorno_inglese]
+
+# --- DATABASE DIETA (GRAMMATURE PER 2800 KCAL) ---
+# N.B. Basato su tolleranza Gastrite (Riso/Patate > Pasta)
+diet_plan = {
+    "Lunedì": {
+        "Focus": "Training Day (High Carbs)",
+        "Colazione": "100g Avena (Porridge) + 200ml Albume + 1 Banana + 20g Mandorle",
+        "Pranzo": "140g Riso Basmati + 150g Petto di Pollo + 10g Olio EVO + Zucchine cotte",
+        "Spuntino": "50g Gallette Riso + 30g Whey (o 80g Fesa Tacchino) + 1 Mela",
+        "Cena": "130g Riso (o 500g Patate lesse) + 150g Merluzzo + 10g Olio EVO"
+    },
+    "Martedì": {
+        "Focus": "Rest Day (Recupero SNC)",
+        "Colazione": "3 Pancake (80g Farina Avena + 1 Uovo + 100ml Albume) + 20g Burro Arachidi",
+        "Pranzo": "120g Riso Venere/Basmati + 150g Tacchino + 10g Olio EVO + Finocchi",
+        "Spuntino": "1 Yogurt Greco (0%) + 20g Noci + 1 Pera",
+        "Cena": "400g Patate Dolci (Americane) + 150g Salmone (o Pesce grasso) + Verdure cotte"
+    },
+    "Mercoledì": {
+        "Focus": "Training Day (Spinta)",
+        "Colazione": "100g Crema di Riso + 30g Whey + 10g Cioccolato Fondente",
+        "Pranzo": "140g Riso Basmati + 150g Macinato Magro (Manzo) + 10g Olio EVO",
+        "Spuntino": "1 Banana + Shaker Proteine (30g)",
+        "Cena": "130g Basmati + 150g Platessa + 10g Olio EVO + Carote lesse"
+    },
+    "Giovedì": {
+        "Focus": "Calcetto / Cardio",
+        "Colazione": "100g Avena + 200g Yogurt Greco + Frutti di Bosco",
+        "Pranzo": "130g Riso + 2 Uova sode + 100g Albume + 10g Olio EVO",
+        "Spuntino": "Barretta Proteica (senza polialcoli se gastrite) + 1 Frutto",
+        "Cena": "120g Riso + 150g Pollo + 10g Olio EVO (Idratazione Extra!)"
+    },
+    "Venerdì": {
+        "Focus": "Training Day (Trazione)",
+        "Colazione": "100g Avena + 200ml Albume + 20g Mandorle",
+        "Pranzo": "140g Pasta di Riso/Mais (No Glutine) + 150g Tonno al naturale + 10g Olio",
+        "Spuntino": "50g Gallette + 80g Bresaola",
+        "Cena": "500g Patate al forno (senza grassi in cottura) + 150g Orata + 10g Olio a crudo"
+    },
+    "Sabato": {
+        "Focus": "Rest Day Attivo",
+        "Colazione": "Pancake (80g Farina + 150ml Albume) + Marmellata light",
+        "Pranzo": "120g Riso + 150g Pollo + Insalata mista + 15g Olio EVO",
+        "Spuntino": "Frullato (1 Banana + 200ml Latte senza lattosio + 30g Whey)",
+        "Cena": "Cheat Meal controllato (Es. Pizza marinara/semplice - Occhio alla gastrite!)"
+    },
+    "Domenica": {
+        "Focus": "Reset Gastrico",
+        "Colazione": "Fette biscottate (5/6) + Miele + 200ml Albume strapazzato",
+        "Pranzo": "120g Riso in bianco + 150g Nasello bollito + 10g Olio + Limone",
+        "Spuntino": "1 Mela cotta + Yogurt Greco",
+        "Cena": "Vellutata di patate/verdure + 150g Tacchino"
     }
+}
 
-# --- PROFILO ---
-st.title("🧬 COACH TITAN")
-st.caption("Evolutionary Protocol | V-Shape Focus")
+# --- INTERFACCIA UTENTE ---
+st.title(f"🧬 TITAN PROTOCOL: {oggi}")
+st.caption("Obiettivo: 85kg | Cibo = Carburante")
 
-# --- 1. NUTRIZIONE (CORRETTO: VISTA GIORNALIERA) ---
-st.header("🍽️ Piano Nutrizionale Odierno")
-st.info("Obiettivo: Lean Bulk (~2800 Kcal) | Focus: Digeribilità")
+# --- 1. CHECK FARMACI (SEMPRE VISIBILE) ---
+st.warning("⚠️ **PROTOCOLLO SICUREZZA MATTINA**")
+st.markdown("""
+* **Sveglia:** Eutirox 75mcg
+* 🛑 **WAIT ZONE:** Devi aspettare **30 minuti** precisi prima di mangiare.
+* *In questo tempo: Fai Vacuum addominale + Elastici spalle.*
+""")
 
-with st.expander("Vedi Menu Completo di Oggi", expanded=True):
-    st.markdown("### 🌅 MATTINA")
-    st.write("**Appena Sveglio:** Eutirox 75mcg")
-    st.warning("⏳ WAIT ZONE 30' (Vacuum + Postura) - TASSATIVO")
-    st.write("**Colazione:** Pancake / Avena + Yogurt + CIPRALEX 10mg")
+# --- 2. MENU DEL GIORNO AUTOMATICO ---
+menu_oggi = diet_plan[oggi]
+
+st.header(f"🍽️ Fueling di {oggi}")
+st.info(f"Target Odierno: **{menu_oggi['Focus']}**")
+
+# Visualizzazione Tabellare Pulita
+col1, col2 = st.columns([1, 3])
+
+with st.container():
+    st.markdown("### 🥞 COLAZIONE")
+    st.write(f"👉 {menu_oggi['Colazione']}")
+    st.markdown(f"💊 *Assumere Cipralex 10mg ora*")
     
     st.markdown("---")
-    st.markdown("### ☀️ PRANZO")
-    st.write("**Fonte:** Riso o Patate (No Pasta integrale se infiamma)")
-    st.write("**Proteine:** Pollo / Pesce Bianco")
-    st.write("**Grassi:** Olio EVO a crudo")
+    
+    st.markdown("### 🍚 PRANZO")
+    st.write(f"👉 {menu_oggi['Pranzo']}")
     
     st.markdown("---")
-    st.markdown("### 🎒 SPUNTINO LAVORO")
-    st.write("**Grab & Go:** Shaker Proteine + Frutta Secca o Barretta")
-    st.error("☕ STOP CAFFÈ dopo le 16:30")
-
+    
+    st.markdown("### 🎒 SPUNTINO")
+    st.write(f"👉 {menu_oggi['Spuntino']}")
+    st.error("☕ *Ultimo caffè entro le 16:30*")
+    
     st.markdown("---")
+    
     st.markdown("### 🌙 CENA (Post-Workout)")
-    st.write("**Carbo:** Riso Basmati / Patate (Alto indice glicemico)")
-    st.write("**Proteine:** Merluzzo / Tacchino")
-    st.warning("💊 DEPAKIN 500mg: Prendi 2 ore dopo fine cena.")
+    st.write(f"👉 {menu_oggi['Cena']}")
+    st.warning("💊 *DEPAKIN 500mg: Assumere 2 ore dopo aver finito di cenare.*")
 
-# --- 2. WORKOUT (CORRETTO: STORICO + EDIT) ---
-st.header("🏋️ War Room (Allenamento)")
-
-scheda = st.selectbox("Seleziona Sessione", ["Scheda A (Spinta)", "Scheda B (Trazione)", "Rest Day"])
-
-if scheda == "Scheda A (Spinta)":
-    st.subheader("🔥 Focus: V-Shape & Spalle")
-    
-    # Creiamo i dati unendo lo storico
-    data_a = {
-        "Esercizio": ["Goblet Squat", "Panca Inclinata Manubri", "Alzate Laterali", "Face Pull"],
-        "Serie x Reps": ["4x8-10", "4x8-10", "5x12-15", "4x15"],
-        "Carico SETT. SCORSA (kg)": [st.session_state['history_a'].get("Goblet Squat"), 
-                                     st.session_state['history_a'].get("Panca Inclinata Manubri"),
-                                     st.session_state['history_a'].get("Alzate Laterali"),
-                                     st.session_state['history_a'].get("Face Pull")],
-        "Carico OGGI (kg)": [0.0, 0.0, 0.0, 0.0] # L'utente scrive qui
-    }
-    
-    df_a = pd.DataFrame(data_a)
-
-    # Configurazione Tabella Editabile
-    st.markdown("Inserisci i carichi di **OGGI** nella colonna di destra:")
-    edited_df = st.data_editor(
-        df_a,
-        column_config={
-            "Carico SETT. SCORSA (kg)": st.column_config.NumberColumn(disabled=True), # Bloccato
-            "Carico OGGI (kg)": st.column_config.NumberColumn(min_value=0, max_value=200, step=0.5) # Modificabile
-        },
-        hide_index=True,
-        num_rows="fixed"
-    )
-
-    if st.button("💾 Salva Allenamento"):
-        # Qui aggiorniamo lo "storico" in memoria per la prossima volta (nella sessione corrente)
-        # Nota: Per salvare PER SEMPRE serve un database (Google Sheets), ma per ora simuliamo.
-        st.toast("Allenamento Salvato! Grande lavoro.", icon="💪")
-        st.balloons()
-
-elif scheda == "Scheda B (Trazione)":
-    st.info("Configura la Scheda B nel codice seguendo l'esempio della A.")
-
-# --- FOOTER ---
+# --- 3. SEZIONE ALLENAMENTO RAPIDO ---
 st.divider()
-st.caption("Coach Titan System v1.2")
-
+st.header("🏋️ Check Allenamento")
+if "Rest" in menu_oggi['Focus']:
+    st.success("✅ OGGI RIPOSO / CARDIO LEGGERO. Fai solo stretching.")
+else:
+    st.error("🔥 OGGI SI SPINGE. Apri la scheda di allenamento.")
+    # Qui potremmo reinserire la logica di inserimento pesi se vuoi
