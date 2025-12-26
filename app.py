@@ -13,75 +13,83 @@ giorni_trad = {
 giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
 
-# --- DATI NUTRIZIONE COMPLETI (2800 KCAL) ---
+# --- COSTANTI FISSE (Tutti i giorni tranne eccezioni) ---
+colazione_std = "80g Fiocchi d'Avena (o Farina) OPPURE 4 Fette biscottate integrali + 200ml Albume (cotto) / 30g Whey / 150g Yogurt Greco 0% + 1 Banana media + 10g Mandorle o Noci"
+spuntino_mattina_std = "1 Frutto (Mela/Pera/Pesca) + 20g Parmigiano OPPURE 15g Frutta Secca"
+spuntino_pom_on = "4 Gallette di Riso + 60g Fesa di Tacchino o Bresaola"
+spuntino_pom_off = "1 Yogurt Greco o 1 Frutto + 10 Mandorle"
+
+# --- DATABASE DIETA (INSERITA SENZA MODIFICHE) ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
-        "Colazione": "100g Avena (Porridge) + 200ml Albume + 1 Banana + 15g Mandorle",
-        "Pranzo": "120g Riso Basmati + 150g Pollo + Zucchine a piacere",
-        "Spuntino": "Shaker Proteine (30g) + 1 Mela + 3 Gallette",
-        "Cena": "HIGH CARB: 400g Patate + 150g Manzo Magro + Spinaci"
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "120g Riso Basmati + 150g Petto di Pollo + Zucchine lesse + 1 cucchiaio Olio",
+        "Spuntino_Pom": spuntino_pom_on,
+        "Cena": "POST-WORKOUT (Ricarica): 400g Patate (Lesse/Forno) + 150g Manzo Magro (trita scelta) + Spinaci cotti + 1 cucchiaio Olio"
     },
     "Martedì": {
         "Type": "REST",
-        "Colazione": "3 Pancake (80g Farina Avena + 150ml Albume) + 20g Burro Arachidi",
-        "Pranzo": "120g Pasta Integrale + 160g Tonno (sgocciolato) + Verdure",
-        "Spuntino": "1 Yogurt Greco (0%) + 15g Noci",
-        "Cena": "LOW CARB: 200g Pesce Bianco + Verdure Cotte + 50g Pane tostato"
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "100g Pasta (Integrale o Farro) + 110g Tonno al naturale (sgocciolato) + Fagiolini + 1 cucchiaio Olio",
+        "Spuntino_Pom": spuntino_pom_off,
+        "Cena": "LOW CARB (Digestivo): 200g Patate (o 60g Pane tostato) + 200g Merluzzo o Platessa + Carote lesse + 1 cucchiaio Olio"
     },
     "Mercoledì": {
         "Type": "GYM B",
-        "Colazione": "100g Crema di Riso + 30g Whey + 10g Cioccolato Fondente",
-        "Pranzo": "120g Riso + 150g Tacchino + Finocchi (Digeribili)",
-        "Spuntino": "1 Banana + Shaker Proteine (30g)",
-        "Cena": "HIGH CARB: 100g Riso Basmati + 150g Salmone + Verdure"
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "120g Riso Basmati + 150g Fesa di Tacchino (alla piastra) + Finocchi cotti (ottimi x stomaco) + 1 cucchiaio Olio",
+        "Spuntino_Pom": spuntino_pom_on,
+        "Cena": "POST-WORKOUT (Omega 3): 120g Riso Basmati (o Venere) + 150g Salmone (Fresco/Surgelato) + Zucchine grigliate + 1 cucchiaio Olio"
     },
     "Giovedì": {
         "Type": "REST",
-        "Colazione": "100g Avena + 200g Yogurt Greco + Frutti di Bosco",
-        "Pranzo": "80g Cereali (Farro/Orzo) + 200g Legumi decorticati (o passati)",
-        "Spuntino": "Barretta Proteica (o 50g Parmigiano) + 1 Pera",
-        "Cena": "LOW CARB: Frittata (2 Uova + 150ml Albume) + Verdure + 50g Pane"
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "80g Farro o Orzo + 150g Lenticchie o Ceci (ben cotti) + Verdure miste + 1 cucchiaio Olio",
+        "Spuntino_Pom": spuntino_pom_off,
+        "Cena": "UOVA & VERDURE: 2 Uova intere + 100ml Albume (frittata) + 80g Pane integrale tostato + Verdure a foglia verde + 1 cucchiaio Olio"
     },
     "Venerdì": {
-        "Type": "GYM A (No Gambe Pesanti)",
-        "Colazione": "100g Avena + 200ml Albume + 20g Mandorle",
-        "Pranzo": "200g Pesce Bianco + 300g Patate Lesse + Carote",
-        "Spuntino": "50g Gallette + 80g Bresaola/Fesa",
-        "Cena": "CARICO PRE-MATCH: 120g Pasta o Riso + 150g Pollo/Pesce Magro (Niente verdure fibrose)"
+        "Type": "GYM A",
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "120g Riso Basmati + 200g Orata o Branzino + Broccoli (se tollerati) o Carote + 1 cucchiaio Olio",
+        "Spuntino_Pom": spuntino_pom_on,
+        "Cena": "CARICO PRE-PARTITA: 120g Pasta (pomodoro leggero o olio) + 150g Pollo o Tacchino + Verdura cotta piccola porzione + 1 cucchiaio Olio"
     },
     "Sabato": {
-        "Type": "CALCETTO",
-        "Colazione": "Pancake (80g Farina + 150ml Albume) + Marmellata",
-        "Pranzo": "100g Riso in bianco + 100g Bresaola/Pollo (No Verdure)",
-        "Spuntino": "Banana (Pre-Partita)",
-        "Cena": "PIZZA / LIBERO (No Alcol, No Fritti pesanti)"
+        "Type": "CALCETTO (Ore 16:00)",
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "NO FIBRE (Ore 12:30): 120g Riso Basmati (in bianco/olio) + 100g Pollo (cotto semplice) - ⛔ NIENTE VERDURE",
+        "Spuntino_Pom": "MATCH DAY (Niente spuntino solito)",
+        "Cena": "CENA LIBERA (Pizza): 1 Pizza Margherita o con Crudo. Niente fritti pesanti. (💊 DEPAKIN 2 ORE DOPO CENA)"
     },
     "Domenica": {
         "Type": "REST",
-        "Colazione": "Fette biscottate (5/6) + Miele + 200ml Albume strapazzato",
-        "Pranzo": "Pasto Libero Moderato (es. Lasagna casalinga)",
-        "Spuntino": "1 Mela cotta + Yogurt",
-        "Cena": "DETOX: Passato di verdure + 150g Merluzzo/Nasello"
+        "Colazione": colazione_std,
+        "Spuntino_Mat": spuntino_mattina_std,
+        "Pranzo": "PASTO LIBERO MODERATO: Es. Lasagna o Riso al forno + Secondo di carne + Verdura",
+        "Spuntino_Pom": spuntino_pom_off,
+        "Cena": "DETOX / RESET: Passato di verdure + 150g Nasello o Merluzzo + 50g Crostini pane + 1 cucchiaio Olio"
     }
 }
 
-# --- SOSTITUZIONI (LUNGHEZZA FISSA 4) ---
+# --- SOSTITUZIONI (UTILI MA NASCOSTE IN EXPANDER) ---
 sostituzioni = {
     "Fonti Carboidrati": {
-        "Riso (100g)": ["400g Patate", "100g Pasta Riso/Mais", "100g Farina Avena", "100g Gallette (12pz)"],
-        "Patate (400g)": ["100g Riso", "350g Patate Dolci", "100g Cous Cous", "-"],
-        "Pane (50g)": ["150g Patate", "40g Gallette", "40g Freselle", "-"]
+        "Riso (120g)": ["400g Patate", "100g Pasta/Farro", "120g Farina Avena", "120g Gallette (ca 14pz)"],
+        "Patate (400g)": ["120g Riso", "350g Patate Dolci", "100g Cous Cous", "-"],
+        "Pane (60g)": ["200g Patate", "50g Gallette", "50g Freselle", "-"]
     },
     "Fonti Proteiche": {
         "Pollo/Tacchino (150g)": ["150g Vitello Magro", "200g Pesce Bianco", "150g Gamberi", "6 Albumi + 1 Uovo"],
         "Manzo (150g)": ["150g Cavallo", "150g Salmone (no olio)", "120g Bresaola", "-"],
-        "Tonno (160g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi Latte", "-"]
-    },
-    "Colazione/Spuntino": {
-        "Avena (100g)": ["100g Crema di Riso", "80g Fette Biscottate", "100g Pane Integrale", "80g Corn Flakes"],
-        "Albume (200ml)": ["30g Whey Protein", "200g Yogurt Greco", "80g Affettato Magro", "-"],
-        "Yogurt": ["Fiocchi di Latte", "Kefir", "Budino Proteico", "-"]
+        "Tonno (110g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi Latte", "-"]
     }
 }
 
@@ -114,52 +122,51 @@ tipo_oggi = oggi_data['Type']
 
 if "GYM A" in tipo_oggi:
     st.error(f"🔥 OGGI: {tipo_oggi} - SPINTA & V-SHAPE")
-    if "Gambe Pesanti" in tipo_oggi:
-         st.info("ℹ️ Nota: Riduci il carico gambe del 30% pre-calcetto.")
     st.data_editor(scheda_a, hide_index=True, num_rows="fixed", use_container_width=True)
-    
 elif "GYM B" in tipo_oggi:
     st.error(f"🔥 OGGI: {tipo_oggi} - TRAZIONE & SCHIENA")
     st.data_editor(scheda_b, hide_index=True, num_rows="fixed", use_container_width=True)
-    
 elif "CALCETTO" in tipo_oggi:
-    st.warning("⚽ OGGI: MATCH DAY. Niente palestra. Focus Idratazione.")
-    
+    st.warning("⚽ OGGI: MATCH DAY (Ore 16:00). Niente palestra.")
 else:
     st.success("💤 OGGI: REST DAY. Recupero attivo.")
 
 # ==========================================
-# SEZIONE 2: NUTRIZIONE (COMPLETA)
+# SEZIONE 2: NUTRIZIONE (DIETA STRICT)
 # ==========================================
 st.divider()
 st.header("🍽️ FUELING (Dieta)")
 
-col1, col2 = st.columns(2)
+st.markdown("### 🥞 COLAZIONE (07:00-08:00)")
+st.info(oggi_data['Colazione'])
 
+st.markdown("### 🍏 SPUNTINO MATTINA (10:30)")
+st.write(oggi_data['Spuntino_Mat'])
+
+st.markdown("---")
+
+col1, col2 = st.columns(2)
 with col1:
-    st.markdown("### 🥞 COLAZIONE")
-    st.info(oggi_data['Colazione'])
-    
     st.markdown("### 🍚 PRANZO")
-    st.info(oggi_data['Pranzo'])
+    # Evidenziamo se è il pranzo Pre-Partita del Sabato
+    if "NO FIBRE" in oggi_data['Pranzo']:
+        st.error(oggi_data['Pranzo'])
+    else:
+        st.write(oggi_data['Pranzo'])
 
 with col2:
-    st.markdown("### 🎒 SPUNTINO")
-    st.success(oggi_data['Spuntino'])
-    
     st.markdown("### 🌙 CENA")
-    st.success(oggi_data['Cena'])
+    st.write(oggi_data['Cena'])
+
+st.markdown("---")
+st.markdown("### 🥪 SPUNTINO POMERIGGIO (16:30)")
+st.caption(f"Status oggi: {'ALLENAMENTO' if 'GYM' in tipo_oggi else 'RIPOSO/MATCH'}")
+st.write(oggi_data['Spuntino_Pom'])
 
 # Sostituzioni
-with st.expander("🔄 TABELLA SOSTITUZIONI (Clicca per aprire)"):
-    st.markdown("### 🍞 Carboidrati")
+with st.expander("🔄 TABELLA SOSTITUZIONI (Se manca qualcosa)"):
     st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]))
-    
-    st.markdown("### 🍗 Proteine")
     st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]))
 
-    st.markdown("### 🥛 Colazione & Snack")
-    st.table(pd.DataFrame(sostituzioni["Colazione/Spuntino"]))
-
 st.divider()
-st.caption("Protocollo V-Shape | Obiettivo 85kg | No Scuse.")
+st.caption("Protocollo V-Shape | Obiettivo 85kg | Coach Titan")
