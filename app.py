@@ -13,13 +13,13 @@ giorni_trad = {
 giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
 
-# --- COSTANTI FISSE (Tutti i giorni tranne eccezioni) ---
+# --- COSTANTI DIETA ---
 colazione_std = "80g Fiocchi d'Avena (o Farina) OPPURE 4 Fette biscottate integrali + 200ml Albume (cotto) / 30g Whey / 150g Yogurt Greco 0% + 1 Banana media + 10g Mandorle o Noci"
 spuntino_mattina_std = "1 Frutto (Mela/Pera/Pesca) + 20g Parmigiano OPPURE 15g Frutta Secca"
 spuntino_pom_on = "4 Gallette di Riso + 60g Fesa di Tacchino o Bresaola"
 spuntino_pom_off = "1 Yogurt Greco o 1 Frutto + 10 Mandorle"
 
-# --- DATABASE DIETA (INSERITA SENZA MODIFICHE) ---
+# --- DATABASE DIETA (INVIOLABILE) ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
@@ -79,7 +79,7 @@ diet_plan = {
     }
 }
 
-# --- SOSTITUZIONI (UTILI MA NASCOSTE IN EXPANDER) ---
+# --- SOSTITUZIONI ---
 sostituzioni = {
     "Fonti Carboidrati": {
         "Riso (120g)": ["400g Patate", "100g Pasta/Farro", "120g Farina Avena", "120g Gallette (ca 14pz)"],
@@ -96,51 +96,100 @@ sostituzioni = {
 # --- INTERFACCIA ---
 st.title(f"🧬 TITAN PROTOCOL: {oggi}")
 oggi_data = diet_plan[oggi]
-
-# ==========================================
-# SEZIONE 1: ALLENAMENTO
-# ==========================================
-st.header("🏋️ WAR ROOM (Scheda)")
-
-scheda_a = pd.DataFrame({
-    "Esercizio": ["Goblet Squat", "Panca Inclinata Manubri", "Alzate Laterali", "Face Pull"],
-    "Serie": ["4", "4", "5", "4"],
-    "Reps": ["8-10", "8-10", "12-15", "15"],
-    "Recupero": ["90''", "90''", "60''", "60''"],
-    "Carico (kg)": [0.0, 0.0, 0.0, 0.0] 
-})
-
-scheda_b = pd.DataFrame({
-    "Esercizio": ["Lat Machine (o Trazioni)", "Pulley Basso", "Alzate 90°", "Curl Manubri"],
-    "Serie": ["4", "4", "4", "4"],
-    "Reps": ["8-10", "10-12", "15", "12"],
-    "Recupero": ["90''", "90''", "60''", "60''"],
-    "Carico (kg)": [0.0, 0.0, 0.0, 0.0]
-})
-
 tipo_oggi = oggi_data['Type']
 
+# ==========================================
+# SEZIONE 1: WAR ROOM (SCHEDA COMPLETA)
+# ==========================================
+st.header("🏋️ WAR ROOM")
+
+# NOTE TECNICHE GENERALI
+with st.expander("ℹ️ METODO & REGOLE (Leggi Prima)", expanded=False):
+    st.markdown("""
+    * **METODO TUT 3-1-1:** 3 secondi a scendere, 1 fermo, 1 a salire.
+    * **PROGRESSIONE:** Aumenta carico (2.5%) SOLO se chiudi le reps con tecnica perfetta.
+    * **DOLORE:** Se senti dolore articolare -> STOP.
+    """)
+
+# DEFINIZIONE SCHEDA A (SPESSORE & CORE)
+scheda_a_data = {
+    "Esercizio": ["1. Goblet Squat", "2. Rematore Manubrio", "3. Panca Inclinata Manubri", "4. Lat Machine Avanti", "5. Face Pull", "6. Plank Statico"],
+    "Serie": ["3", "3", "3", "3", "4", "3"],
+    "Reps": ["10", "10", "10", "12", "15", "45''"],
+    "Recupero": ["90''", "60''", "90''", "60''", "60''", "45''"],
+    "Note Tecniche": [
+        "Gomiti STRETTI. Manubrio al petto. VENERDÌ: Buffer 2 reps (risparmia gambe).",
+        "Mano su panca. Schiena piatta. Tira verso l'anca.",
+        "Panca 30°. Scendi in 3 SECONDI. Focus clavicole.",
+        "Petto in fuori. NON dondolare.",
+        "Cavo fronte. Ruota polsi. CRITICO per cifosi.",
+        "Strizza glutei. Non inarcare la lombare."
+    ],
+    "Carico (kg)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+}
+
+# DEFINIZIONE SCHEDA B (V-SHAPE)
+scheda_b_data = {
+    "Esercizio": ["1. Affondi Manubri", "2. Pulley Basso", "3. Shoulder Press Macchina", "4. Lat Pulldown (Neutra)", "5. Alzate Laterali", "6. Push Down (Tricipiti)", "7. Vacuum Addominale"],
+    "Serie": ["3", "3", "3", "3", "4", "3", "5"],
+    "Reps": ["10xlato", "12", "10", "10", "15", "12", "20''"],
+    "Recupero": ["90''", "60''", "90''", "60''", "45''", "60''", "30''"],
+    "Note Tecniche": [
+        "Busto dritto. Controllo totale.",
+        "Usa triangolo. Allungati bene avanti, chiudi scapole tirando.",
+        "Proteggi schiena (meglio dei manubri). Non inarcare.",
+        "Presa stretta/neutra. Tira al petto alto. Focus V-Shape.",
+        "Carico basso. Gomiti altezza spalle. No slanci.",
+        "Gomiti incollati ai fianchi.",
+        "A stomaco vuoto. Risucchia ombelico."
+    ],
+    "Carico (kg)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+}
+
+# LOGICA VISUALIZZAZIONE
 if "GYM A" in tipo_oggi:
-    st.error(f"🔥 OGGI: {tipo_oggi} - SPINTA & V-SHAPE")
-    st.data_editor(scheda_a, hide_index=True, num_rows="fixed", use_container_width=True)
+    st.error(f"🔥 OGGI: {tipo_oggi} - SPESSORE & CORE")
+    if "Venerdì" in oggi:
+        st.warning("⚽ PRE-CALCETTO: Nel Goblet Squat lascia 2 ripetizioni di riserva!")
+    
+    df_a = pd.DataFrame(scheda_a_data)
+    st.data_editor(
+        df_a, 
+        hide_index=True, 
+        use_container_width=True, 
+        column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")}
+    )
+
 elif "GYM B" in tipo_oggi:
-    st.error(f"🔥 OGGI: {tipo_oggi} - TRAZIONE & SCHIENA")
-    st.data_editor(scheda_b, hide_index=True, num_rows="fixed", use_container_width=True)
+    st.error(f"🔥 OGGI: {tipo_oggi} - V-SHAPE & AMPIEZZA")
+    df_b = pd.DataFrame(scheda_b_data)
+    st.data_editor(
+        df_b, 
+        hide_index=True, 
+        use_container_width=True,
+        column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")}
+    )
+
 elif "CALCETTO" in tipo_oggi:
-    st.warning("⚽ OGGI: MATCH DAY (Ore 16:00). Niente palestra.")
+    st.warning("⚽ OGGI: MATCH DAY (Ore 16:00).")
+    st.markdown("""
+    * **Pranzo:** Solo Riso + Pollo (No Fibre).
+    * **Idratazione:** 1.5L acqua prima della partita.
+    """)
+
 else:
     st.success("💤 OGGI: REST DAY. Recupero attivo.")
 
 # ==========================================
-# SEZIONE 2: NUTRIZIONE (DIETA STRICT)
+# SEZIONE 2: NUTRIZIONE
 # ==========================================
 st.divider()
-st.header("🍽️ FUELING (Dieta)")
+st.header("🍽️ FUELING")
 
-st.markdown("### 🥞 COLAZIONE (07:00-08:00)")
+st.markdown("### 🥞 COLAZIONE")
 st.info(oggi_data['Colazione'])
 
-st.markdown("### 🍏 SPUNTINO MATTINA (10:30)")
+st.markdown("### 🍏 SPUNTINO MATTINA")
 st.write(oggi_data['Spuntino_Mat'])
 
 st.markdown("---")
@@ -148,7 +197,6 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 with col1:
     st.markdown("### 🍚 PRANZO")
-    # Evidenziamo se è il pranzo Pre-Partita del Sabato
     if "NO FIBRE" in oggi_data['Pranzo']:
         st.error(oggi_data['Pranzo'])
     else:
@@ -159,12 +207,11 @@ with col2:
     st.write(oggi_data['Cena'])
 
 st.markdown("---")
-st.markdown("### 🥪 SPUNTINO POMERIGGIO (16:30)")
-st.caption(f"Status oggi: {'ALLENAMENTO' if 'GYM' in tipo_oggi else 'RIPOSO/MATCH'}")
+st.markdown("### 🥪 SPUNTINO POMERIGGIO")
 st.write(oggi_data['Spuntino_Pom'])
 
-# Sostituzioni
-with st.expander("🔄 TABELLA SOSTITUZIONI (Se manca qualcosa)"):
+# SOSTITUZIONI
+with st.expander("🔄 TABELLA SOSTITUZIONI"):
     st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]))
     st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]))
 
