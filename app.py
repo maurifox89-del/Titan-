@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 from datetime import datetime
 
 # --- CONFIGURAZIONE ---
@@ -12,6 +13,18 @@ giorni_trad = {
 }
 giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
+oggi_data_breve = datetime.now().strftime("%Y-%m-%d")
+
+# --- GESTIONE SALVATAGGIO PESO (MEMORIA) ---
+FILE_DATI = "progressi_peso.csv"
+
+# Se il file non esiste, lo creiamo vuoto
+if not os.path.exists(FILE_DATI):
+    df_init = pd.DataFrame(columns=["Data", "Peso"])
+    df_init.to_csv(FILE_DATI, index=False)
+
+# Carichiamo i dati esistenti
+df_peso = pd.read_csv(FILE_DATI)
 
 # --- COSTANTI DIETA ---
 colazione_std = "80g Fiocchi d'Avena (o Farina) OPPURE 4 Fette biscottate integrali + 200ml Albume (cotto) / 30g Whey / 150g Yogurt Greco 0% + 1 Banana media + 10g Mandorle o Noci"
@@ -19,7 +32,7 @@ spuntino_mattina_std = "1 Frutto (Mela/Pera/Pesca) + 20g Parmigiano OPPURE 15g F
 spuntino_pom_on = "4 Gallette di Riso + 60g Fesa di Tacchino o Bresaola"
 spuntino_pom_off = "1 Yogurt Greco o 1 Frutto + 10 Mandorle"
 
-# --- DATABASE DIETA (INVIOLABILE) ---
+# --- DATABASE DIETA ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
@@ -99,11 +112,32 @@ oggi_data = diet_plan[oggi]
 tipo_oggi = oggi_data['Type']
 
 # ==========================================
-# SEZIONE 1: WAR ROOM (SCHEDA COMPLETA)
+# 📈 SEZIONE PROGRESSI
+# ==========================================
+with st.expander("📈 REGISTRO PESO & GRAFICO", expanded=False):
+    col_in, col_btn = st.columns([2, 1])
+    with col_in:
+        nuovo_peso = st.number_input("Peso di oggi (kg)", min_value=60.0, max_value=100.0, step=0.1, key="input_peso")
+    with col_btn:
+        st.write("") 
+        st.write("") 
+        if st.button("Salva Peso"):
+            nuova_riga = pd.DataFrame({"Data": [oggi_data_breve], "Peso": [nuovo_peso]})
+            df_peso = pd.concat([df_peso, nuova_riga], ignore_index=True)
+            df_peso.to_csv(FILE_DATI, index=False)
+            st.success(f"Salvato: {nuovo_peso}kg")
+            st.rerun()
+
+    if not df_peso.empty:
+        st.subheader("Andamento verso 85kg")
+        st.line_chart(df_peso.set_index("Data"))
+        st.caption(f"Ultimo peso: {df_peso.iloc[-1]['Peso']} kg")
+
+# ==========================================
+# SEZIONE 1: WAR ROOM
 # ==========================================
 st.header("🏋️ WAR ROOM")
 
-# NOTE TECNICHE GENERALI
 with st.expander("ℹ️ METODO & REGOLE (Leggi Prima)", expanded=False):
     st.markdown("""
     * **METODO TUT 3-1-1:** 3 secondi a scendere, 1 fermo, 1 a salire.
@@ -111,7 +145,6 @@ with st.expander("ℹ️ METODO & REGOLE (Leggi Prima)", expanded=False):
     * **DOLORE:** Se senti dolore articolare -> STOP.
     """)
 
-# DEFINIZIONE SCHEDA A (SPESSORE & CORE)
 scheda_a_data = {
     "Esercizio": ["1. Goblet Squat", "2. Rematore Manubrio", "3. Panca Inclinata Manubri", "4. Lat Machine Avanti", "5. Face Pull", "6. Plank Statico"],
     "Serie": ["3", "3", "3", "3", "4", "3"],
@@ -128,7 +161,6 @@ scheda_a_data = {
     "Carico (kg)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 }
 
-# DEFINIZIONE SCHEDA B (V-SHAPE)
 scheda_b_data = {
     "Esercizio": ["1. Affondi Manubri", "2. Pulley Basso", "3. Shoulder Press Macchina", "4. Lat Pulldown (Neutra)", "5. Alzate Laterali", "6. Push Down (Tricipiti)", "7. Vacuum Addominale"],
     "Serie": ["3", "3", "3", "3", "4", "3", "5"],
@@ -146,74 +178,56 @@ scheda_b_data = {
     "Carico (kg)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 }
 
-# LOGICA VISUALIZZAZIONE
 if "GYM A" in tipo_oggi:
     st.error(f"🔥 OGGI: {tipo_oggi} - SPESSORE & CORE")
     if "Venerdì" in oggi:
         st.warning("⚽ PRE-CALCETTO: Nel Goblet Squat lascia 2 ripetizioni di riserva!")
-    
-    df_a = pd.DataFrame(scheda_a_data)
-    st.data_editor(
-        df_a, 
-        hide_index=True, 
-        use_container_width=True, 
-        column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")}
-    )
+    st.data_editor(pd.DataFrame(scheda_a_data), hide_index=True, use_container_width=True, column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")})
 
 elif "GYM B" in tipo_oggi:
     st.error(f"🔥 OGGI: {tipo_oggi} - V-SHAPE & AMPIEZZA")
-    df_b = pd.DataFrame(scheda_b_data)
-    st.data_editor(
-        df_b, 
-        hide_index=True, 
-        use_container_width=True,
-        column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")}
-    )
+    st.data_editor(pd.DataFrame(scheda_b_data), hide_index=True, use_container_width=True, column_config={"Note Tecniche": st.column_config.TextColumn(width="medium")})
 
 elif "CALCETTO" in tipo_oggi:
     st.warning("⚽ OGGI: MATCH DAY (Ore 16:00).")
-    st.markdown("""
-    * **Pranzo:** Solo Riso + Pollo (No Fibre).
-    * **Idratazione:** 1.5L acqua prima della partita.
-    """)
+    st.info("Ricorda: Niente fibre a pranzo.")
 
 else:
     st.success("💤 OGGI: REST DAY. Recupero attivo.")
 
 # ==========================================
-# SEZIONE 2: NUTRIZIONE
+# SEZIONE 2: NUTRIZIONE (ORDINE CRONOLOGICO)
 # ==========================================
 st.divider()
-st.header("🍽️ FUELING")
+st.header("🍽️ FUELING (Menu del Giorno)")
 
-st.markdown("### 🥞 COLAZIONE")
+# 1. COLAZIONE
+st.markdown("### 🥞 1. COLAZIONE (07:00-08:00)")
 st.info(oggi_data['Colazione'])
 
-st.markdown("### 🍏 SPUNTINO MATTINA")
+# 2. SPUNTINO MATTINA
+st.markdown("### 🍏 2. SPUNTINO MATTINA (10:30)")
 st.write(oggi_data['Spuntino_Mat'])
 
-st.markdown("---")
+# 3. PRANZO
+st.markdown("### 🍚 3. PRANZO (13:00-14:00)")
+if "NO FIBRE" in oggi_data['Pranzo']:
+    st.error(oggi_data['Pranzo'])
+else:
+    st.write(oggi_data['Pranzo'])
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("### 🍚 PRANZO")
-    if "NO FIBRE" in oggi_data['Pranzo']:
-        st.error(oggi_data['Pranzo'])
-    else:
-        st.write(oggi_data['Pranzo'])
-
-with col2:
-    st.markdown("### 🌙 CENA")
-    st.write(oggi_data['Cena'])
-
-st.markdown("---")
-st.markdown("### 🥪 SPUNTINO POMERIGGIO")
+# 4. SPUNTINO POMERIGGIO
+st.markdown("### 🥪 4. SPUNTINO POMERIGGIO (16:30)")
 st.write(oggi_data['Spuntino_Pom'])
 
+# 5. CENA
+st.markdown("### 🌙 5. CENA (Post-Workout/Relax)")
+st.success(oggi_data['Cena'])
+
 # SOSTITUZIONI
-with st.expander("🔄 TABELLA SOSTITUZIONI"):
+st.divider()
+with st.expander("🔄 TABELLA SOSTITUZIONI (Se manca qualcosa)"):
     st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]))
     st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]))
 
-st.divider()
 st.caption("Protocollo V-Shape | Obiettivo 85kg | Coach Titan")
