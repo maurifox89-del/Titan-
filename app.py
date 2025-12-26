@@ -61,7 +61,7 @@ bowl = "🥣 BOWL VELOCE: 150g Yogurt Greco 0% + 4 Fette Biscottate + 1 Frutto"
 
 diet_plan = {
     "Lunedì": {"Type": "GYM A", "Kcal": "2850", "Colazione": (pancake, bowl), "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: 15g Frutta Secca"), "Pranzo": ("120g Riso + 150g Pollo + Zucchine", "Alt: 400g Patate + Pesce"), "Spuntino_Pom": ("4 Gallette + 60g Fesa", "Alt: Banana + Whey"), "Cena": ("POST-WO: 400g Patate + 150g Manzo + Spinaci", "Alt: 120g Riso + Cavallo")},
-    "Martedì": {"Type": "REST", "Kcal": "2600", "Colazione": (bowl, pancake), "Spuntino_Mat": ("1 Frutto + 15g Mandorle", "Alt: Yogurt"), "Pranzo": ("100g Pasta Int. + 110g Tonno + Fagiolini", "Alt: Farro + Sgombro"), "Spuntino_Pom": ("Yogurt + 10 Mandorle", "Alt: Frutto + Parmigiano"), "Cena": ("LOW CARB: 200g Patate + 200g Merluzzo", "Alt: 60g Pane + Pollo")},
+    "Martedì": {"Type": "REST", "Kcal": "2600", "Colazione": (bowl, pancake), "Spuntino_Mat": ("1 Frutto + 15g Mandorle", "Alt: Yogurt"), "Pranzo": ("100g Pasta Int. + 110g Tonno + Fagiolini", "Alt: Farro + Sgombro"), "Spuntino_Pom": ("Yogurt + 10 Mandorle", "Alt: Frutto + Parmigiano"), "Cena": ("LOW CARB: 200g Patate + 200g Merluzzo + Carote", "Alt: 60g Pane + Pollo")},
     "Mercoledì": {"Type": "GYM B", "Kcal": "2850", "Colazione": ("Cream Rice + Whey", "Alt: " + pancake), "Spuntino_Mat": ("Frutto + Parmigiano", "-"), "Pranzo": ("120g Riso + 150g Tacchino + Finocchi", "Alt: Patate + Vitello"), "Spuntino_Pom": ("4 Gallette + Bresaola", "Alt: Banana + Whey"), "Cena": ("POST-WO: 120g Riso Venere + 150g Salmone", "Alt: Patate Dolci + Manzo")},
     "Giovedì": {"Type": "REST", "Kcal": "2600", "Colazione": ("Yogurt Bowl + Avena", "Alt: Fette Bisc + Whey"), "Spuntino_Mat": ("Frutto + Noci", "-"), "Pranzo": ("80g Farro + 150g Legumi", "Alt: Pasta + Uova"), "Spuntino_Pom": ("Yogurt + Pera", "-"), "Cena": ("Frittata (2 Uova) + 80g Pane", "Alt: Pesce + Patate")},
     "Venerdì": {"Type": "GYM A", "Kcal": "2900", "Colazione": (pancake, bowl), "Spuntino_Mat": ("Frutto + Parmigiano", "-"), "Pranzo": ("120g Riso + 200g Orata", "Alt: Patate + Pollo"), "Spuntino_Pom": ("4 Gallette + Fesa", "-"), "Cena": ("PRE-MATCH: 120g Pasta + 150g Pollo", "Alt: Riso + Merluzzo")},
@@ -151,7 +151,7 @@ if "GYM" in tipo_oggi:
         }
     )
 
-    # 2. SALVATAGGIO SESSIONE (NUOVO)
+    # 2. SALVATAGGIO SESSIONE (CODICE CORRETTO)
     col_save, col_info = st.columns([1, 1])
     with col_save:
         if st.button("💾 SALVA SESSIONE COMPLETA"):
@@ -160,14 +160,17 @@ if "GYM" in tipo_oggi:
             
             if not completed_exercises.empty:
                 new_records = []
+                # Prendiamo la data corrente qui per evitare errori di sintassi
+                today_date_str = datetime.now().strftime("%Y-%m-%d")
+                
                 for index, row in completed_exercises.iterrows():
-                    # Ignora se carico è 0 (a meno che non sia corpo libero, ma assumiamo pesi)
+                    # Ignora se carico è 0
                     if row["Carico (kg)"] > 0:
                         new_records.append({
-                            "Data": today_date_str := datetime.now().strftime("%Y-%m-%d"),
+                            "Data": today_date_str,
                             "Esercizio": row["Esercizio"],
                             "Carico": row["Carico (kg)"],
-                            "Reps": row["Set x Reps"] # Salviamo il target reps come riferimento
+                            "Reps": row["Set x Reps"] 
                         })
                 
                 if new_records:
@@ -180,23 +183,26 @@ if "GYM" in tipo_oggi:
             else:
                 st.warning("Spunta almeno un esercizio fatto prima di salvare.")
 
-    # 3. ANALISI STORICO CARICHI (NUOVO)
+    # 3. ANALISI STORICO CARICHI
     st.write("")
     with st.expander("📈 VEDI STORICO ESERCIZIO (Grafico)", expanded=False):
         # Lista unica di esercizi presenti nel file storico
         if not df_esercizi.empty:
             lista_es = df_esercizi["Esercizio"].unique()
-            scelta_es = st.selectbox("Seleziona Esercizio da analizzare:", lista_es)
-            
-            # Filtra dati
-            dati_es = df_esercizi[df_esercizi["Esercizio"] == scelta_es]
-            
-            if not dati_es.empty:
-                st.line_chart(dati_es.set_index("Data")["Carico"])
-                ult_carico = dati_es.iloc[-1]["Carico"]
-                st.caption(f"Ultimo carico registrato: **{ult_carico} kg**")
+            if len(lista_es) > 0:
+                scelta_es = st.selectbox("Seleziona Esercizio da analizzare:", lista_es)
+                
+                # Filtra dati
+                dati_es = df_esercizi[df_esercizi["Esercizio"] == scelta_es]
+                
+                if not dati_es.empty:
+                    st.line_chart(dati_es.set_index("Data")["Carico"])
+                    ult_carico = dati_es.iloc[-1]["Carico"]
+                    st.caption(f"Ultimo carico registrato: **{ult_carico} kg**")
+                else:
+                    st.write("Nessun dato per questo esercizio.")
             else:
-                st.write("Nessun dato per questo esercizio.")
+                 st.write("Nessun esercizio salvato finora.")
         else:
             st.write("Ancora nessun allenamento salvato nel database.")
 
