@@ -4,185 +4,154 @@ import time
 from datetime import datetime
 
 # --- CONFIGURAZIONE ---
-st.set_page_config(page_title="Titan Pro UI", page_icon="🧬", layout="centered")
+st.set_page_config(page_title="Titan App", page_icon="🧬", layout="centered")
 
-# --- CSS INJECTION (IL TRUCCO PER L'ESTETICA) ---
-# Qui forziamo lo stile per farlo assomigliare alla tua foto
+# --- CSS OTTIMIZZATO PER MOBILE ---
 st.markdown("""
 <style>
-    /* Sfondo generale più pulito */
-    .stApp {
-        background-color: #F8F9FA;
+    /* Rimuove margini inutili per guadagnare spazio su mobile */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 5rem;
     }
     
-    /* Stile per i Container (Le "Carte" bianche) */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: white;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border: 1px solid #E0E0E0;
-    }
-
-    /* Bottoni Rossi (Stile Titan) */
+    /* Stile Bottoni Rossi TITAN */
     .stButton > button {
-        background-color: #B71C1C; /* Rosso Scuro */
-        color: white;
-        border-radius: 12px;
-        border: none;
-        padding: 10px 20px;
-        font-weight: bold;
+        background-color: #B71C1C !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: bold !important;
+        height: 50px;
         width: 100%;
     }
-    .stButton > button:hover {
-        background-color: #D32F2F; /* Rosso più chiaro al passaggio */
-        color: white;
-    }
-
-    /* Bottoni Secondari (Bianchi con bordo rosso) */
-    .secondary-btn > button {
-        background-color: white !important;
-        color: #B71C1C !important;
-        border: 2px solid #B71C1C !important;
-    }
-
-    /* Input Fields (Arrotondati) */
-    .stNumberInput > div > div > input {
-        border-radius: 10px;
+    
+    /* Stile Input (Pesi e Reps) più grandi per le dita */
+    .stNumberInput input {
         text-align: center;
+        font-size: 20px;
         font-weight: bold;
-        font-size: 18px;
+        color: #B71C1C;
     }
     
-    /* Nascondere etichette inutili */
-    label {
-        font-weight: bold;
-        color: #333;
-    }
-    
-    /* Titoli grandi */
-    h1, h2, h3 {
-        font-family: 'Helvetica', sans-serif;
-        color: #212121;
+    /* Nasconde freccette input su mobile per pulizia */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- DATI ESERCIZIO (SIMULATI) ---
-esercizio_corrente = {
-    "Nome": "A. Lat Machine",
-    "Target_Serie": 4,
-    "Target_Reps": "10-8-6-5",
-    "Recupero": 90,
-    "History_Pesi": [40, 45, 50, 55] # Ultimi pesi usati
-}
-
-# Inizializza lo stato se vuoto
-if "serie_log" not in st.session_state:
-    st.session_state["serie_log"] = [
-        {"Set": 1, "Kg": 40.0, "Reps": 10},
-        {"Set": 2, "Kg": 45.0, "Reps": 8},
-        {"Set": 3, "Kg": 50.0, "Reps": 6},
-        {"Set": 4, "Kg": 55.0, "Reps": 5}
+# --- INIZIALIZZAZIONE STATO (LA MEMORIA) ---
+# Questo blocco assicura che i dati non spariscano quando clicchi
+if "workout_data" not in st.session_state:
+    st.session_state.workout_data = [
+        {"set": 1, "kg": 40.0, "reps": 10},
+        {"set": 2, "kg": 45.0, "reps": 8},
+        {"set": 3, "kg": 50.0, "reps": 6},
+        {"set": 4, "kg": 55.0, "reps": 5}
     ]
 
-# ==========================================
-# 📱 INTERFACCIA MOBILE REPLICA
-# ==========================================
+# --- FUNZIONI DI GESTIONE (LOGICA) ---
+def aggiungi_serie():
+    nuovo_set = len(st.session_state.workout_data) + 1
+    # Copiamo il peso dell'ultima serie per comodità
+    ultimo_peso = st.session_state.workout_data[-1]["kg"] if st.session_state.workout_data else 0.0
+    st.session_state.workout_data.append({"set": nuovo_set, "kg": ultimo_peso, "reps": 0})
 
-# 1. HEADER ESERCIZIO
-st.subheader(esercizio_corrente["Nome"])
+def rimuovi_serie():
+    if len(st.session_state.workout_data) > 0:
+        st.session_state.workout_data.pop()
 
-# 2. INFO RAPIDE (ICONE)
-col_info1, col_info2, col_info3 = st.columns(3)
-with col_info1:
-    st.markdown(f"<div style='text-align:center; color:#B71C1C; font-size:24px;'>🔄</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align:center;'><b>{esercizio_corrente['Target_Serie']}</b><br><span style='font-size:12px; color:grey'>Serie</span></div>", unsafe_allow_html=True)
-with col_info2:
-    st.markdown(f"<div style='text-align:center; color:#B71C1C; font-size:24px;'>🏋️</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align:center;'><b>{esercizio_corrente['Target_Reps']}</b><br><span style='font-size:12px; color:grey'>Reps Target</span></div>", unsafe_allow_html=True)
-with col_info3:
-    st.markdown(f"<div style='text-align:center; color:#B71C1C; font-size:24px;'>⏳</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align:center;'><b>{esercizio_corrente['Recupero']}''</b><br><span style='font-size:12px; color:grey'>Recupero</span></div>", unsafe_allow_html=True)
+# --- INTERFACCIA UTENTE ---
 
-st.markdown("---")
+# 1. HEADER
+col_title, col_hist = st.columns([3, 1])
+with col_title:
+    st.title("A. Lat Machine")
+    st.caption("Focus: Schiena / V-Shape")
+with col_hist:
+    st.markdown("## 📈") # Placeholder per bottone storico
 
-# 3. BOTTONI AZIONE (ESECUZIONE / STORICO)
-c1, c2 = st.columns(2)
-with c1:
-    st.button("▶️ Esecuzione VIDEO")
-with c2:
-    # Usiamo un trucco CSS per rendere questo bottone diverso se volessimo, 
-    # ma per ora lo lasciamo standard rosso
-    st.button("📈 Storico Pesi") 
-
-st.write("") # Spazio
-
-# 4. IL "CARD" DEGLI INPUT (Cuore dell'interfaccia)
-# Usiamo st.container con border=True per creare la scatola bianca
+# 2. TARGET E INFO
 with st.container(border=True):
-    st.markdown("### Serie")
-    
-    # Intestazioni Colonne
-    h1, h2, h3 = st.columns([0.5, 2, 2])
-    h2.markdown("<div style='text-align:center; color:grey; font-size:14px'>Peso (Kg)</div>", unsafe_allow_html=True)
-    h3.markdown("<div style='text-align:center; color:grey; font-size:14px'>Ripetizioni</div>", unsafe_allow_html=True)
-    
-    # GENERAZIONE RIGHE DINAMICHE
-    for i, serie in enumerate(st.session_state["serie_log"]):
-        c_num, c_kg, c_reps = st.columns([0.5, 2, 2])
-        
-        # Numero Serie (Rosso e Grassetto)
-        with c_num:
-            st.markdown(f"<div style='padding-top: 35px; color: #B71C1C; font-weight: bold; font-size: 20px;'>{serie['Set']}</div>", unsafe_allow_html=True)
-        
-        # Input Peso
-        with c_kg:
-            nuovo_kg = st.number_input(
-                f"kg_{i}", 
-                value=float(serie['Kg']), 
-                step=1.25, 
-                label_visibility="collapsed",
-                key=f"w_{i}"
-            )
-            
-        # Input Reps
-        with c_reps:
-            nuove_reps = st.number_input(
-                f"reps_{i}", 
-                value=int(serie['Reps']), 
-                step=1, 
-                label_visibility="collapsed",
-                key=f"r_{i}"
-            )
-            
-        # Aggiorniamo lo stato in tempo reale
-        st.session_state["serie_log"][i]["Kg"] = nuovo_kg
-        st.session_state["serie_log"][i]["Reps"] = nuove_reps
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Serie", "4")
+    c2.metric("Reps", "10-8-6-5")
+    c3.metric("Recupero", "90''")
 
-    st.write("") # Spazio
+st.divider()
+
+# 3. CARD INPUT (IL CUORE DELL'APP)
+st.subheader("📝 Registra Serie")
+
+# Intestazioni (Per capire cosa inserire)
+h1, h2, h3 = st.columns([0.7, 2, 2])
+h1.write("#")
+h2.markdown("**Kg**")
+h3.markdown("**Reps**")
+
+# CICLO DI RENDERING SERIE
+for i, row in enumerate(st.session_state.workout_data):
+    # Layout colonne ottimizzato per mobile: 1 piccola, 2 grandi uguali
+    c1, c2, c3 = st.columns([0.7, 2, 2])
     
-    # BOTTONI DI SERVIZIO DENTRO LA CARD
-    if st.button(f"⏱️ AVVIA RECUPERO: {esercizio_corrente['Recupero']}''"):
-        with st.spinner("Recupero in corso... Respira profondo."):
-            time.sleep(2) # Simulazione timer
-        st.success("Recupero Finito! SPINGI!")
+    with c1:
+        # Numero serie (Centrato verticalmente col padding vuoto)
+        st.markdown(f"<h3 style='text-align: center; color: #B71C1C; margin-top: 10px;'>{row['set']}</h3>", unsafe_allow_html=True)
+    
+    with c2:
+        # Input Peso - Collegato direttamente allo stato tramite KEY
+        val_kg = st.number_input(
+            "Kg", 
+            value=float(row['kg']), 
+            step=1.0, 
+            key=f"kg_{i}", 
+            label_visibility="collapsed"
+        )
+        # Aggiornamento immediato dello stato
+        st.session_state.workout_data[i]["kg"] = val_kg
 
-    if st.button("➕ Aggiungi Serie (Drop Set)"):
-        nuovo_set = len(st.session_state["serie_log"]) + 1
-        st.session_state["serie_log"].append({"Set": nuovo_set, "Kg": 0.0, "Reps": 0})
-        st.rerun()
+    with c3:
+        # Input Reps - Collegato direttamente allo stato tramite KEY
+        val_reps = st.number_input(
+            "Reps", 
+            value=int(row['reps']), 
+            step=1, 
+            key=f"reps_{i}", 
+            label_visibility="collapsed"
+        )
+        # Aggiornamento immediato dello stato
+        st.session_state.workout_data[i]["reps"] = val_reps
 
-# 5. BOTTONE FINALE GIGANTE
+# 4. BOTTONI DI CONTROLLO
 st.write("")
-st.write("")
-st.button("✅ TERMINA ALLENAMENTO", type="primary")
+col_add, col_del = st.columns([2, 1])
 
-# --- FOOTER SIMULATO (NAVBAR) ---
+with col_add:
+    # Callback: quando clicchi, esegue la funzione PRIMA di ricaricare
+    st.button("➕ AGGIUNGI SERIE", on_click=aggiungi_serie)
+
+with col_del:
+    st.button("🗑️", on_click=rimuovi_serie)
+
+# 5. TIMER RECUPERO
+st.write("")
+if st.button("⏱️ AVVIA RECUPERO (90'')"):
+    with st.spinner("Recupero in corso..."):
+        time.sleep(2) # Simulazione breve per demo
+    st.toast("Recupero Finito! Torni a spingere.", icon="🔥")
+
+# 6. SALVATAGGIO FINALE
 st.markdown("---")
-nav1, nav2, nav3, nav4 = st.columns(4)
-with nav1: st.markdown("<div style='text-align:center; color:grey'>🏠<br>Home</div>", unsafe_allow_html=True)
-with nav2: st.markdown("<div style='text-align:center; color:#B71C1C; font-weight:bold'>🏋️<br>Workout</div>", unsafe_allow_html=True)
-with nav3: st.markdown("<div style='text-align:center; color:grey'>🍽️<br>Nutrizione</div>", unsafe_allow_html=True)
-with nav4: st.markdown("<div style='text-align:center; color:grey'>💬<br>Chat</div>", unsafe_allow_html=True)
+if st.button("✅ TERMINA & SALVA ESERCIZIO"):
+    # Qui salveremmo su CSV/Database
+    df_result = pd.DataFrame(st.session_state.workout_data)
+    st.success("Dati Salvati con Successo!")
+    st.dataframe(df_result, hide_index=True) # Feedback visivo di cosa ha salvato
+    # Reset opzionale
+    # st.session_state.workout_data = [] 
 
+# --- FOOTER ---
+st.caption("Coach Titan System v2.0 Mobile")
