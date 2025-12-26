@@ -14,7 +14,6 @@ giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
 
 # --- DATI NUTRIZIONE (STRATEGIA RICHIESTA) ---
-# Grammature stimate per Lean Bulk (Target ~2800kcal)
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
@@ -53,19 +52,20 @@ diet_plan = {
     }
 }
 
-# --- SOSTITUZIONI (LISTA INTELLIGENTE) ---
+# --- SOSTITUZIONI (CORRETTO: LUNGHEZZE UGUALI) ---
+# Tutte le liste hanno ORA 4 elementi per evitare crash
 sostituzioni = {
     "Fonti Carboidrati": {
-        "Riso (100g)": ["400g Patate", "100g Pasta di Riso/Mais", "100g Farina Avena", "100g Gallette (ca 12 pz)"],
-        "Patate (400g)": ["100g Riso", "350g Patate Dolci", "100g Cous Cous"],
-        "Pane (50g)": ["150g Patate", "40g Gallette", "40g Freselle"]
+        "Riso (100g)": ["400g Patate", "100g Pasta Riso/Mais", "100g Farina Avena", "100g Gallette (12pz)"],
+        "Patate (400g)": ["100g Riso", "350g Patate Dolci", "100g Cous Cous", "-"],
+        "Pane (50g)": ["150g Patate", "40g Gallette", "40g Freselle", "-"]
     },
     "Fonti Proteiche": {
         "Pollo/Tacchino (150g)": ["150g Vitello Magro", "200g Pesce Bianco", "150g Gamberi", "6 Albumi + 1 Uovo"],
-        "Manzo (150g)": ["150g Cavallo", "150g Salmone (ma togli l'olio dal pasto)", "120g Bresaola"],
-        "Tonno (160g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi di Latte"]
+        "Manzo (150g)": ["150g Cavallo", "150g Salmone (no olio)", "120g Bresaola", "-"],
+        "Tonno (160g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi Latte", "-"]
     },
-    "Verdure": "Se hai gastrite, evita: Broccoli, Cavolfiori, Peperoni. Preferisci: Zucchine, Carote, Finocchi, Spinaci, Valeriana."
+    "Verdure": "Gastrite? Evita: Broccoli, Cavolfiori, Peperoni. OK: Zucchine, Carote, Finocchi, Spinaci, Valeriana."
 }
 
 # --- INTERFACCIA ---
@@ -73,7 +73,7 @@ st.title(f"🧬 TITAN PROTOCOL: {oggi}")
 oggi_data = diet_plan[oggi]
 
 # ==========================================
-# SEZIONE 1: ALLENAMENTO (PRIORITÀ VISIVA)
+# SEZIONE 1: ALLENAMENTO
 # ==========================================
 st.header("🏋️ WAR ROOM (Scheda)")
 
@@ -94,13 +94,12 @@ scheda_b = pd.DataFrame({
     "Carico (kg)": [0.0, 0.0, 0.0, 0.0]
 })
 
-# Logica di visualizzazione basata sul giorno
 tipo_oggi = oggi_data['Type']
 
 if "GYM A" in tipo_oggi:
     st.error(f"🔥 OGGI: {tipo_oggi} - SPINTA & V-SHAPE")
-    if "Gambe Pesanti" in tipo_oggi: # Venerdì
-         st.info("ℹ️ Nota: Riduci il carico o il volume sulle gambe in vista del calcetto.")
+    if "Gambe Pesanti" in tipo_oggi:
+         st.info("ℹ️ Nota: Riduci il carico gambe del 30% pre-calcetto.")
     st.data_editor(scheda_a, hide_index=True, num_rows="fixed", use_container_width=True)
     
 elif "GYM B" in tipo_oggi:
@@ -112,7 +111,6 @@ elif "CALCETTO" in tipo_oggi:
     
 else:
     st.success("💤 OGGI: REST DAY. Recupero attivo (Stretching / Vacuum).")
-
 
 # ==========================================
 # SEZIONE 2: NUTRIZIONE
@@ -131,11 +129,16 @@ with col2:
 
 # Sostituzioni (Menu a tendina)
 with st.expander("🔄 TABELLA SOSTITUZIONI (Clicca per aprire)"):
-    st.write("**Carboidrati:**")
-    st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]).transpose())
-    st.write("**Proteine:**")
-    st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]).transpose())
-    st.write(f"**Verdure:** {sostituzioni['Verdure']}")
+    st.markdown("### 🍞 Carboidrati")
+    # Qui usiamo .astype(str) per sicurezza, ma le liste ora sono pari
+    df_carbo = pd.DataFrame(sostituzioni["Fonti Carboidrati"])
+    st.table(df_carbo)
+    
+    st.markdown("### 🍗 Proteine")
+    df_prot = pd.DataFrame(sostituzioni["Fonti Proteiche"])
+    st.table(df_prot)
+    
+    st.info(f"**Verdure:** {sostituzioni['Verdure']}")
 
 st.divider()
 st.caption("Protocollo V-Shape | Obiettivo 85kg | No Scuse.")
