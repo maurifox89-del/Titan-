@@ -6,14 +6,22 @@ from datetime import datetime
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="centered")
 
-# --- LOGICA TEMPORALE ---
+# --- LOGICA TEMPORALE & SELETTORE GIORNO ---
+giorni_list = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 giorni_trad = {
     "Monday": "Lunedì", "Tuesday": "Martedì", "Wednesday": "Mercoledì",
     "Thursday": "Giovedì", "Friday": "Venerdì", "Saturday": "Sabato", "Sunday": "Domenica"
 }
-giorno_inglese = datetime.now().strftime("%A")
-oggi = giorni_trad[giorno_inglese]
+
+# Calcola il giorno reale di oggi per il default
+giorno_reale_inglese = datetime.now().strftime("%A")
+giorno_reale_ita = giorni_trad[giorno_reale_inglese]
 oggi_data_breve = datetime.now().strftime("%Y-%m-%d")
+
+# --- TITOLO & SELETTORE ---
+st.title("🧬 TITAN PROTOCOL")
+# Il selettore parte di default sul giorno di OGGI, ma puoi cambiarlo
+selected_day = st.selectbox("📅 Visualizza Piano del Giorno:", giorni_list, index=giorni_list.index(giorno_reale_ita))
 
 # --- FILE SALVATAGGIO PESO ---
 FILE_DATI = "progressi_peso.csv"
@@ -21,8 +29,7 @@ if not os.path.exists(FILE_DATI):
     pd.DataFrame(columns=["Data", "Peso"]).to_csv(FILE_DATI, index=False)
 df_peso = pd.read_csv(FILE_DATI)
 
-# --- DATABASE DIETA (CON ALTERNATIVE INCLUSE) ---
-# Format: "Main Option" | "Alternative"
+# --- DATABASE DIETA ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
@@ -98,9 +105,27 @@ diet_plan = {
     }
 }
 
-# --- INTERFACCIA ---
-st.title(f"🧬 TITAN PROTOCOL: {oggi}")
-oggi_data = diet_plan[oggi]
+# --- DATI SCHEDE ---
+scheda_a_raw = {
+    "✅": [False]*6,
+    "Esercizio": ["Goblet Squat", "Rematore Manubrio", "Panca Inclinata", "Lat Machine", "Face Pull", "Plank"],
+    "Set x Reps": ["3 x 10", "3 x 10", "3 x 10", "3 x 12", "4 x 15", "3 x 45''"],
+    "Rec": ["90''", "60''", "90''", "60''", "60''", "45''"],
+    "Note Tecniche": ["Gomiti stretti. Venerdì: Buffer 2 reps.", "Schiena piatta. Tira all'anca.", "Discesa 3 sec. Focus petto alto.", "Non dondolare. Petto fuori.", "Ruota polsi. Fondamentale cifosi.", "Strizza glutei. No lombare curva."],
+    "Carico (kg)": [0.0]*6
+}
+
+scheda_b_raw = {
+    "✅": [False]*7,
+    "Esercizio": ["Affondi Manubri", "Pulley Basso", "Shoulder Press", "Lat Pulldown", "Alzate Laterali", "Push Down", "Vacuum"],
+    "Set x Reps": ["3 x 10xlato", "3 x 12", "3 x 10", "3 x 10", "4 x 15", "3 x 12", "5 x 20''"],
+    "Rec": ["90''", "60''", "90''", "60''", "45''", "60''", "30''"],
+    "Note Tecniche": ["Busto dritto. Passi controllati.", "Allungati avanti, chiudi scapole.", "Macchina protegge schiena.", "Presa neutra/stretta. V-Shape.", "Gomiti alti. No slanci.", "Gomiti incollati ai fianchi.", "A vuoto. Risucchia ombelico."],
+    "Carico (kg)": [0.0]*7
+}
+
+# --- RECUPERO DATI GIORNO SELEZIONATO ---
+oggi_data = diet_plan[selected_day]
 tipo_oggi = oggi_data['Type']
 
 # ==========================================
@@ -124,42 +149,21 @@ with st.expander("📈 REGISTRO PESO & GRAFICO", expanded=False):
         st.caption(f"Ultimo: {df_peso.iloc[-1]['Peso']} kg")
 
 # ==========================================
-# 🏋️ WAR ROOM (SCHEDA SMART)
+# 🏋️ WAR ROOM (ALLENAMENTO)
 # ==========================================
-st.header("🏋️ WAR ROOM")
-
-# Dati Schede (Con colonna "Fatto" per checkbox)
-scheda_a_raw = {
-    "✅": [False]*6,
-    "Esercizio": ["Goblet Squat", "Rematore Manubrio", "Panca Inclinata", "Lat Machine", "Face Pull", "Plank"],
-    "Set x Reps": ["3 x 10", "3 x 10", "3 x 10", "3 x 12", "4 x 15", "3 x 45''"],
-    "Rec": ["90''", "60''", "90''", "60''", "60''", "45''"],
-    "Note Tecniche": ["Gomiti stretti. Venerdì: Buffer 2 reps.", "Schiena piatta. Tira all'anca.", "Discesa 3 sec. Focus petto alto.", "Non dondolare. Petto fuori.", "Ruota polsi. Fondamentale cifosi.", "Strizza glutei. No lombare curva."],
-    "Carico (kg)": [0.0]*6
-}
-
-scheda_b_raw = {
-    "✅": [False]*7,
-    "Esercizio": ["Affondi Manubri", "Pulley Basso", "Shoulder Press", "Lat Pulldown", "Alzate Laterali", "Push Down", "Vacuum"],
-    "Set x Reps": ["3 x 10xlato", "3 x 12", "3 x 10", "3 x 10", "4 x 15", "3 x 12", "5 x 20''"],
-    "Rec": ["90''", "60''", "90''", "60''", "45''", "60''", "30''"],
-    "Note Tecniche": ["Busto dritto. Passi controllati.", "Allungati avanti, chiudi scapole.", "Macchina protegge schiena.", "Presa neutra/stretta. V-Shape.", "Gomiti alti. No slanci.", "Gomiti incollati ai fianchi.", "A vuoto. Risucchia ombelico."],
-    "Carico (kg)": [0.0]*7
-}
+st.header(f"🏋️ WAR ROOM: {tipo_oggi}")
 
 if "GYM" in tipo_oggi:
-    st.error(f"🔥 FOCUS OGGI: {tipo_oggi}")
-    
-    # Selezione Scheda
+    # Selezione Scheda in base al tipo di giornata
     df_active = pd.DataFrame(scheda_a_raw) if "GYM A" in tipo_oggi else pd.DataFrame(scheda_b_raw)
     
-    # Visualizzazione SMART
+    st.info("Spunta le caselle quando completi l'esercizio.")
     edited_df = st.data_editor(
         df_active,
         hide_index=True,
         use_container_width=True,
         column_config={
-            "✅": st.column_config.CheckboxColumn("Fatto", help="Spunta quando completato", default=False),
+            "✅": st.column_config.CheckboxColumn("Fatto", default=False),
             "Esercizio": st.column_config.TextColumn("Esercizio", width="medium"),
             "Set x Reps": st.column_config.TextColumn("Set/Reps", width="small"),
             "Rec": st.column_config.TextColumn("Rec", width="small"),
@@ -167,56 +171,49 @@ if "GYM" in tipo_oggi:
             "Carico (kg)": st.column_config.NumberColumn("Carico", min_value=0, max_value=200, step=0.5, format="%.1f kg")
         }
     )
-    
-    # Barra Progresso (Gamification)
+    # Barra Progresso
     fatti = edited_df["✅"].sum()
     totali = len(edited_df)
     progresso = fatti / totali
     st.progress(progresso, text=f"Completamento: {int(progresso*100)}%")
-    
     if progresso == 1.0:
         st.balloons()
-        st.success("SESSIONE COMPLETATA DA TITANO! 🦍")
+        st.success("GRANDE. RECUPERA E MANGIA.")
 
 elif "CALCETTO" in tipo_oggi:
     st.warning("⚽ MATCH DAY (16:00)")
-    st.info("Ricorda: Niente fibre a pranzo. 1.5L Acqua pre-match.")
+    st.markdown("""
+    * **Pranzo:** Solo Riso e Pollo (Zero Fibre).
+    * **Acqua:** 1.5L prima del match.
+    """)
 
 else:
-    st.success("💤 REST DAY - Recupero Attivo")
+    st.success("💤 REST DAY - Recupero Attivo & Stretching")
 
 # ==========================================
-# 🍽️ FUELING (DIETA HYBRID)
+# 🍽️ FUELING (DIETA ORDINATA)
 # ==========================================
 st.divider()
 st.header("🍽️ FUELING")
 
-def show_meal(title, data):
-    st.markdown(f"### {title}")
-    # Opzione Principale (Grassetto/Evidente)
-    st.info(f"**{data[0]}**")
-    # Alternativa (Subito sotto, più discreta)
+def show_meal_box(title, data, icon):
+    st.markdown(f"#### {icon} {title}")
+    st.info(f"**{data[0]}**") # Opzione principale
     if data[1] != "-":
-        st.markdown(f"> 🔄 *{data[1]}*")
+        st.caption(f"🔄 *Oppure: {data[1]}*") # Alternativa
+    st.write("---") # Separatore visivo
 
-col1, col2 = st.columns(2)
-
-with col1:
-    show_meal("🥞 COLAZIONE", oggi_data['Colazione'])
-    show_meal("🍚 PRANZO", oggi_data['Pranzo'])
-
-with col2:
-    show_meal("🍏 SPUNTINO", oggi_data['Spuntino_Mat'])
-    show_meal("🌙 CENA", oggi_data['Cena'])
-
-st.markdown("---")
-show_meal("🥪 MERENDA", oggi_data['Spuntino_Pom'])
+# SEQUENZA ORDINATA
+show_meal_box("1. COLAZIONE (07:00-08:00)", oggi_data['Colazione'], "🥞")
+show_meal_box("2. SPUNTINO MATTINA (10:30)", oggi_data['Spuntino_Mat'], "🍏")
+show_meal_box("3. PRANZO (13:00-14:00)", oggi_data['Pranzo'], "🍚")
+show_meal_box("4. MERENDA POMERIGGIO (16:30)", oggi_data['Spuntino_Pom'], "🥪")
+show_meal_box("5. CENA (Post-WO/Relax)", oggi_data['Cena'], "🌙")
 
 # ==========================================
-# 🔄 TABELLA SOSTITUZIONI (SEMPRE PRESENTE)
+# 🔄 TABELLA SOSTITUZIONI
 # ==========================================
-st.divider()
-with st.expander("📚 TABELLA SOSTITUZIONI COMPLETA (Consultare se necessario)"):
+with st.expander("📚 TABELLA SOSTITUZIONI (Consultare se necessario)"):
     sostituzioni = {
         "Fonti Carboidrati": {
             "Riso (120g)": ["400g Patate", "100g Pasta/Farro", "120g Avena", "120g Gallette"],
@@ -229,7 +226,9 @@ with st.expander("📚 TABELLA SOSTITUZIONI COMPLETA (Consultare se necessario)"
             "Tonno (110g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi Latte", "-"]
         }
     }
+    st.write("**Carboidrati**")
     st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]))
+    st.write("**Proteine**")
     st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]))
 
 st.caption("Protocollo V-Shape | Obiettivo 85kg | Coach Titan")
