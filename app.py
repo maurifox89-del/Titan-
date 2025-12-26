@@ -9,8 +9,6 @@ st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="center
 
 # --- INIZIALIZZAZIONE DATI (SIMULAZIONE DATABASE) ---
 if 'history_a' not in st.session_state:
-    # ... il resto del codice rimane uguale ...
-if 'history_a' not in st.session_state:
     st.session_state['history_a'] = {
         "Goblet Squat": 20.0,
         "Panca Inclinata Manubri": 22.0,
@@ -94,3 +92,4 @@ elif scheda == "Scheda B (Trazione)":
 # --- FOOTER ---
 st.divider()
 st.caption("Coach Titan System v1.2")
+
