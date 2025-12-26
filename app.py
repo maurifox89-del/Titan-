@@ -13,47 +13,60 @@ giorni_trad = {
 giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
 
-# --- DATI NUTRIZIONE (STRATEGIA RICHIESTA) ---
+# --- DATI NUTRIZIONE COMPLETI (2800 KCAL) ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
+        "Colazione": "100g Avena (Porridge) + 200ml Albume + 1 Banana + 15g Mandorle",
         "Pranzo": "120g Riso Basmati + 150g Pollo + Zucchine a piacere",
+        "Spuntino": "Shaker Proteine (30g) + 1 Mela + 3 Gallette",
         "Cena": "HIGH CARB: 400g Patate + 150g Manzo Magro + Spinaci"
     },
     "Martedì": {
         "Type": "REST",
+        "Colazione": "3 Pancake (80g Farina Avena + 150ml Albume) + 20g Burro Arachidi",
         "Pranzo": "120g Pasta Integrale + 160g Tonno (sgocciolato) + Verdure",
+        "Spuntino": "1 Yogurt Greco (0%) + 15g Noci",
         "Cena": "LOW CARB: 200g Pesce Bianco + Verdure Cotte + 50g Pane tostato"
     },
     "Mercoledì": {
         "Type": "GYM B",
+        "Colazione": "100g Crema di Riso + 30g Whey + 10g Cioccolato Fondente",
         "Pranzo": "120g Riso + 150g Tacchino + Finocchi (Digeribili)",
+        "Spuntino": "1 Banana + Shaker Proteine (30g)",
         "Cena": "HIGH CARB: 100g Riso Basmati + 150g Salmone + Verdure"
     },
     "Giovedì": {
         "Type": "REST",
+        "Colazione": "100g Avena + 200g Yogurt Greco + Frutti di Bosco",
         "Pranzo": "80g Cereali (Farro/Orzo) + 200g Legumi decorticati (o passati)",
+        "Spuntino": "Barretta Proteica (o 50g Parmigiano) + 1 Pera",
         "Cena": "LOW CARB: Frittata (2 Uova + 150ml Albume) + Verdure + 50g Pane"
     },
     "Venerdì": {
         "Type": "GYM A (No Gambe Pesanti)",
+        "Colazione": "100g Avena + 200ml Albume + 20g Mandorle",
         "Pranzo": "200g Pesce Bianco + 300g Patate Lesse + Carote",
-        "Cena": "CARICO PRE-MATCH: 120g Pasta o Riso + 150g Pollo/Pesce Magro (Niente fibre/verdure pesanti)"
+        "Spuntino": "50g Gallette + 80g Bresaola/Fesa",
+        "Cena": "CARICO PRE-MATCH: 120g Pasta o Riso + 150g Pollo/Pesce Magro (Niente verdure fibrose)"
     },
     "Sabato": {
         "Type": "CALCETTO",
-        "Pranzo": "100g Riso in bianco + 100g Bresaola/Pollo (No Verdure per evitare gonfiore in campo)",
+        "Colazione": "Pancake (80g Farina + 150ml Albume) + Marmellata",
+        "Pranzo": "100g Riso in bianco + 100g Bresaola/Pollo (No Verdure)",
+        "Spuntino": "Banana (Pre-Partita)",
         "Cena": "PIZZA / LIBERO (No Alcol, No Fritti pesanti)"
     },
     "Domenica": {
         "Type": "REST",
+        "Colazione": "Fette biscottate (5/6) + Miele + 200ml Albume strapazzato",
         "Pranzo": "Pasto Libero Moderato (es. Lasagna casalinga)",
+        "Spuntino": "1 Mela cotta + Yogurt",
         "Cena": "DETOX: Passato di verdure + 150g Merluzzo/Nasello"
     }
 }
 
-# --- SOSTITUZIONI (CORRETTO: LUNGHEZZE UGUALI) ---
-# Tutte le liste hanno ORA 4 elementi per evitare crash
+# --- SOSTITUZIONI (LUNGHEZZA FISSA 4) ---
 sostituzioni = {
     "Fonti Carboidrati": {
         "Riso (100g)": ["400g Patate", "100g Pasta Riso/Mais", "100g Farina Avena", "100g Gallette (12pz)"],
@@ -65,7 +78,11 @@ sostituzioni = {
         "Manzo (150g)": ["150g Cavallo", "150g Salmone (no olio)", "120g Bresaola", "-"],
         "Tonno (160g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi Latte", "-"]
     },
-    "Verdure": "Gastrite? Evita: Broccoli, Cavolfiori, Peperoni. OK: Zucchine, Carote, Finocchi, Spinaci, Valeriana."
+    "Colazione/Spuntino": {
+        "Avena (100g)": ["100g Crema di Riso", "80g Fette Biscottate", "100g Pane Integrale", "80g Corn Flakes"],
+        "Albume (200ml)": ["30g Whey Protein", "200g Yogurt Greco", "80g Affettato Magro", "-"],
+        "Yogurt": ["Fiocchi di Latte", "Kefir", "Budino Proteico", "-"]
+    }
 }
 
 # --- INTERFACCIA ---
@@ -77,7 +94,6 @@ oggi_data = diet_plan[oggi]
 # ==========================================
 st.header("🏋️ WAR ROOM (Scheda)")
 
-# Definiamo le schede
 scheda_a = pd.DataFrame({
     "Esercizio": ["Goblet Squat", "Panca Inclinata Manubri", "Alzate Laterali", "Face Pull"],
     "Serie": ["4", "4", "5", "4"],
@@ -110,35 +126,40 @@ elif "CALCETTO" in tipo_oggi:
     st.warning("⚽ OGGI: MATCH DAY. Niente palestra. Focus Idratazione.")
     
 else:
-    st.success("💤 OGGI: REST DAY. Recupero attivo (Stretching / Vacuum).")
+    st.success("💤 OGGI: REST DAY. Recupero attivo.")
 
 # ==========================================
-# SEZIONE 2: NUTRIZIONE
+# SEZIONE 2: NUTRIZIONE (COMPLETA)
 # ==========================================
 st.divider()
 st.header("🍽️ FUELING (Dieta)")
 
 col1, col2 = st.columns(2)
+
 with col1:
-    st.info("**PRANZO**")
-    st.write(oggi_data['Pranzo'])
+    st.markdown("### 🥞 COLAZIONE")
+    st.info(oggi_data['Colazione'])
+    
+    st.markdown("### 🍚 PRANZO")
+    st.info(oggi_data['Pranzo'])
 
 with col2:
-    st.success("**CENA**")
-    st.write(oggi_data['Cena'])
+    st.markdown("### 🎒 SPUNTINO")
+    st.success(oggi_data['Spuntino'])
+    
+    st.markdown("### 🌙 CENA")
+    st.success(oggi_data['Cena'])
 
-# Sostituzioni (Menu a tendina)
+# Sostituzioni
 with st.expander("🔄 TABELLA SOSTITUZIONI (Clicca per aprire)"):
     st.markdown("### 🍞 Carboidrati")
-    # Qui usiamo .astype(str) per sicurezza, ma le liste ora sono pari
-    df_carbo = pd.DataFrame(sostituzioni["Fonti Carboidrati"])
-    st.table(df_carbo)
+    st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]))
     
     st.markdown("### 🍗 Proteine")
-    df_prot = pd.DataFrame(sostituzioni["Fonti Proteiche"])
-    st.table(df_prot)
-    
-    st.info(f"**Verdure:** {sostituzioni['Verdure']}")
+    st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]))
+
+    st.markdown("### 🥛 Colazione & Snack")
+    st.table(pd.DataFrame(sostituzioni["Colazione/Spuntino"]))
 
 st.divider()
 st.caption("Protocollo V-Shape | Obiettivo 85kg | No Scuse.")
