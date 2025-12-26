@@ -1,123 +1,141 @@
 import streamlit as st
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="centered")
 
-# --- LOGICA TEMPORALE (IL CERVELLO) ---
-# Dizionario per tradurre i giorni in Italiano
+# --- LOGICA TEMPORALE ---
 giorni_trad = {
     "Monday": "Lunedì", "Tuesday": "Martedì", "Wednesday": "Mercoledì",
     "Thursday": "Giovedì", "Friday": "Venerdì", "Saturday": "Sabato", "Sunday": "Domenica"
 }
-
-# Ottieni il giorno corrente
 giorno_inglese = datetime.now().strftime("%A")
 oggi = giorni_trad[giorno_inglese]
 
-# --- DATABASE DIETA (GRAMMATURE PER 2800 KCAL) ---
-# N.B. Basato su tolleranza Gastrite (Riso/Patate > Pasta)
+# --- DATI NUTRIZIONE (STRATEGIA RICHIESTA) ---
+# Grammature stimate per Lean Bulk (Target ~2800kcal)
 diet_plan = {
     "Lunedì": {
-        "Focus": "Training Day (High Carbs)",
-        "Colazione": "100g Avena (Porridge) + 200ml Albume + 1 Banana + 20g Mandorle",
-        "Pranzo": "140g Riso Basmati + 150g Petto di Pollo + 10g Olio EVO + Zucchine cotte",
-        "Spuntino": "50g Gallette Riso + 30g Whey (o 80g Fesa Tacchino) + 1 Mela",
-        "Cena": "130g Riso (o 500g Patate lesse) + 150g Merluzzo + 10g Olio EVO"
+        "Type": "GYM A",
+        "Pranzo": "120g Riso Basmati + 150g Pollo + Zucchine a piacere",
+        "Cena": "HIGH CARB: 400g Patate + 150g Manzo Magro + Spinaci"
     },
     "Martedì": {
-        "Focus": "Rest Day (Recupero SNC)",
-        "Colazione": "3 Pancake (80g Farina Avena + 1 Uovo + 100ml Albume) + 20g Burro Arachidi",
-        "Pranzo": "120g Riso Venere/Basmati + 150g Tacchino + 10g Olio EVO + Finocchi",
-        "Spuntino": "1 Yogurt Greco (0%) + 20g Noci + 1 Pera",
-        "Cena": "400g Patate Dolci (Americane) + 150g Salmone (o Pesce grasso) + Verdure cotte"
+        "Type": "REST",
+        "Pranzo": "120g Pasta Integrale + 160g Tonno (sgocciolato) + Verdure",
+        "Cena": "LOW CARB: 200g Pesce Bianco + Verdure Cotte + 50g Pane tostato"
     },
     "Mercoledì": {
-        "Focus": "Training Day (Spinta)",
-        "Colazione": "100g Crema di Riso + 30g Whey + 10g Cioccolato Fondente",
-        "Pranzo": "140g Riso Basmati + 150g Macinato Magro (Manzo) + 10g Olio EVO",
-        "Spuntino": "1 Banana + Shaker Proteine (30g)",
-        "Cena": "130g Basmati + 150g Platessa + 10g Olio EVO + Carote lesse"
+        "Type": "GYM B",
+        "Pranzo": "120g Riso + 150g Tacchino + Finocchi (Digeribili)",
+        "Cena": "HIGH CARB: 100g Riso Basmati + 150g Salmone + Verdure"
     },
     "Giovedì": {
-        "Focus": "Calcetto / Cardio",
-        "Colazione": "100g Avena + 200g Yogurt Greco + Frutti di Bosco",
-        "Pranzo": "130g Riso + 2 Uova sode + 100g Albume + 10g Olio EVO",
-        "Spuntino": "Barretta Proteica (senza polialcoli se gastrite) + 1 Frutto",
-        "Cena": "120g Riso + 150g Pollo + 10g Olio EVO (Idratazione Extra!)"
+        "Type": "REST",
+        "Pranzo": "80g Cereali (Farro/Orzo) + 200g Legumi decorticati (o passati)",
+        "Cena": "LOW CARB: Frittata (2 Uova + 150ml Albume) + Verdure + 50g Pane"
     },
     "Venerdì": {
-        "Focus": "Training Day (Trazione)",
-        "Colazione": "100g Avena + 200ml Albume + 20g Mandorle",
-        "Pranzo": "140g Pasta di Riso/Mais (No Glutine) + 150g Tonno al naturale + 10g Olio",
-        "Spuntino": "50g Gallette + 80g Bresaola",
-        "Cena": "500g Patate al forno (senza grassi in cottura) + 150g Orata + 10g Olio a crudo"
+        "Type": "GYM A (No Gambe Pesanti)",
+        "Pranzo": "200g Pesce Bianco + 300g Patate Lesse + Carote",
+        "Cena": "CARICO PRE-MATCH: 120g Pasta o Riso + 150g Pollo/Pesce Magro (Niente fibre/verdure pesanti)"
     },
     "Sabato": {
-        "Focus": "Rest Day Attivo",
-        "Colazione": "Pancake (80g Farina + 150ml Albume) + Marmellata light",
-        "Pranzo": "120g Riso + 150g Pollo + Insalata mista + 15g Olio EVO",
-        "Spuntino": "Frullato (1 Banana + 200ml Latte senza lattosio + 30g Whey)",
-        "Cena": "Cheat Meal controllato (Es. Pizza marinara/semplice - Occhio alla gastrite!)"
+        "Type": "CALCETTO",
+        "Pranzo": "100g Riso in bianco + 100g Bresaola/Pollo (No Verdure per evitare gonfiore in campo)",
+        "Cena": "PIZZA / LIBERO (No Alcol, No Fritti pesanti)"
     },
     "Domenica": {
-        "Focus": "Reset Gastrico",
-        "Colazione": "Fette biscottate (5/6) + Miele + 200ml Albume strapazzato",
-        "Pranzo": "120g Riso in bianco + 150g Nasello bollito + 10g Olio + Limone",
-        "Spuntino": "1 Mela cotta + Yogurt Greco",
-        "Cena": "Vellutata di patate/verdure + 150g Tacchino"
+        "Type": "REST",
+        "Pranzo": "Pasto Libero Moderato (es. Lasagna casalinga)",
+        "Cena": "DETOX: Passato di verdure + 150g Merluzzo/Nasello"
     }
 }
 
-# --- INTERFACCIA UTENTE ---
+# --- SOSTITUZIONI (LISTA INTELLIGENTE) ---
+sostituzioni = {
+    "Fonti Carboidrati": {
+        "Riso (100g)": ["400g Patate", "100g Pasta di Riso/Mais", "100g Farina Avena", "100g Gallette (ca 12 pz)"],
+        "Patate (400g)": ["100g Riso", "350g Patate Dolci", "100g Cous Cous"],
+        "Pane (50g)": ["150g Patate", "40g Gallette", "40g Freselle"]
+    },
+    "Fonti Proteiche": {
+        "Pollo/Tacchino (150g)": ["150g Vitello Magro", "200g Pesce Bianco", "150g Gamberi", "6 Albumi + 1 Uovo"],
+        "Manzo (150g)": ["150g Cavallo", "150g Salmone (ma togli l'olio dal pasto)", "120g Bresaola"],
+        "Tonno (160g)": ["150g Sgombro", "200g Merluzzo", "170g Fiocchi di Latte"]
+    },
+    "Verdure": "Se hai gastrite, evita: Broccoli, Cavolfiori, Peperoni. Preferisci: Zucchine, Carote, Finocchi, Spinaci, Valeriana."
+}
+
+# --- INTERFACCIA ---
 st.title(f"🧬 TITAN PROTOCOL: {oggi}")
-st.caption("Obiettivo: 85kg | Cibo = Carburante")
+oggi_data = diet_plan[oggi]
 
-# --- 1. CHECK FARMACI (SEMPRE VISIBILE) ---
-st.warning("⚠️ **PROTOCOLLO SICUREZZA MATTINA**")
-st.markdown("""
-* **Sveglia:** Eutirox 75mcg
-* 🛑 **WAIT ZONE:** Devi aspettare **30 minuti** precisi prima di mangiare.
-* *In questo tempo: Fai Vacuum addominale + Elastici spalle.*
-""")
+# ==========================================
+# SEZIONE 1: ALLENAMENTO (PRIORITÀ VISIVA)
+# ==========================================
+st.header("🏋️ WAR ROOM (Scheda)")
 
-# --- 2. MENU DEL GIORNO AUTOMATICO ---
-menu_oggi = diet_plan[oggi]
+# Definiamo le schede
+scheda_a = pd.DataFrame({
+    "Esercizio": ["Goblet Squat", "Panca Inclinata Manubri", "Alzate Laterali", "Face Pull"],
+    "Serie": ["4", "4", "5", "4"],
+    "Reps": ["8-10", "8-10", "12-15", "15"],
+    "Recupero": ["90''", "90''", "60''", "60''"],
+    "Carico (kg)": [0.0, 0.0, 0.0, 0.0] 
+})
 
-st.header(f"🍽️ Fueling di {oggi}")
-st.info(f"Target Odierno: **{menu_oggi['Focus']}**")
+scheda_b = pd.DataFrame({
+    "Esercizio": ["Lat Machine (o Trazioni)", "Pulley Basso", "Alzate 90°", "Curl Manubri"],
+    "Serie": ["4", "4", "4", "4"],
+    "Reps": ["8-10", "10-12", "15", "12"],
+    "Recupero": ["90''", "90''", "60''", "60''"],
+    "Carico (kg)": [0.0, 0.0, 0.0, 0.0]
+})
 
-# Visualizzazione Tabellare Pulita
-col1, col2 = st.columns([1, 3])
+# Logica di visualizzazione basata sul giorno
+tipo_oggi = oggi_data['Type']
 
-with st.container():
-    st.markdown("### 🥞 COLAZIONE")
-    st.write(f"👉 {menu_oggi['Colazione']}")
-    st.markdown(f"💊 *Assumere Cipralex 10mg ora*")
+if "GYM A" in tipo_oggi:
+    st.error(f"🔥 OGGI: {tipo_oggi} - SPINTA & V-SHAPE")
+    if "Gambe Pesanti" in tipo_oggi: # Venerdì
+         st.info("ℹ️ Nota: Riduci il carico o il volume sulle gambe in vista del calcetto.")
+    st.data_editor(scheda_a, hide_index=True, num_rows="fixed", use_container_width=True)
     
-    st.markdown("---")
+elif "GYM B" in tipo_oggi:
+    st.error(f"🔥 OGGI: {tipo_oggi} - TRAZIONE & SCHIENA")
+    st.data_editor(scheda_b, hide_index=True, num_rows="fixed", use_container_width=True)
     
-    st.markdown("### 🍚 PRANZO")
-    st.write(f"👉 {menu_oggi['Pranzo']}")
+elif "CALCETTO" in tipo_oggi:
+    st.warning("⚽ OGGI: MATCH DAY. Niente palestra. Focus Idratazione.")
     
-    st.markdown("---")
-    
-    st.markdown("### 🎒 SPUNTINO")
-    st.write(f"👉 {menu_oggi['Spuntino']}")
-    st.error("☕ *Ultimo caffè entro le 16:30*")
-    
-    st.markdown("---")
-    
-    st.markdown("### 🌙 CENA (Post-Workout)")
-    st.write(f"👉 {menu_oggi['Cena']}")
-    st.warning("💊 *DEPAKIN 500mg: Assumere 2 ore dopo aver finito di cenare.*")
-
-# --- 3. SEZIONE ALLENAMENTO RAPIDO ---
-st.divider()
-st.header("🏋️ Check Allenamento")
-if "Rest" in menu_oggi['Focus']:
-    st.success("✅ OGGI RIPOSO / CARDIO LEGGERO. Fai solo stretching.")
 else:
-    st.error("🔥 OGGI SI SPINGE. Apri la scheda di allenamento.")
-    # Qui potremmo reinserire la logica di inserimento pesi se vuoi
+    st.success("💤 OGGI: REST DAY. Recupero attivo (Stretching / Vacuum).")
+
+
+# ==========================================
+# SEZIONE 2: NUTRIZIONE
+# ==========================================
+st.divider()
+st.header("🍽️ FUELING (Dieta)")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.info("**PRANZO**")
+    st.write(oggi_data['Pranzo'])
+
+with col2:
+    st.success("**CENA**")
+    st.write(oggi_data['Cena'])
+
+# Sostituzioni (Menu a tendina)
+with st.expander("🔄 TABELLA SOSTITUZIONI (Clicca per aprire)"):
+    st.write("**Carboidrati:**")
+    st.table(pd.DataFrame(sostituzioni["Fonti Carboidrati"]).transpose())
+    st.write("**Proteine:**")
+    st.table(pd.DataFrame(sostituzioni["Fonti Proteiche"]).transpose())
+    st.write(f"**Verdure:** {sostituzioni['Verdure']}")
+
+st.divider()
+st.caption("Protocollo V-Shape | Obiettivo 85kg | No Scuse.")
