@@ -6,6 +6,28 @@ from datetime import datetime
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="centered")
 
+# --- CSS CUSTOM PER BARRA ACQUA E STILE ---
+st.markdown("""
+<style>
+    /* Stile per il Water Tracker */
+    .stProgress > div > div > div > div {
+        background-color: #00B4D8;
+    }
+    /* Renderizza i totali calorici ben visibili */
+    .kcal-box {
+        background-color: #ffebee;
+        color: #b71c1c;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 20px;
+        margin-top: 20px;
+        border: 2px solid #b71c1c;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # --- LOGICA TEMPORALE & SELETTORE GIORNO ---
 giorni_list = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 giorni_trad = {
@@ -13,15 +35,25 @@ giorni_trad = {
     "Thursday": "Giovedì", "Friday": "Venerdì", "Saturday": "Sabato", "Sunday": "Domenica"
 }
 
-# Calcola il giorno reale di oggi per il default
+# Calcola il giorno reale
 giorno_reale_inglese = datetime.now().strftime("%A")
 giorno_reale_ita = giorni_trad[giorno_reale_inglese]
 oggi_data_breve = datetime.now().strftime("%Y-%m-%d")
 
 # --- TITOLO & SELETTORE ---
 st.title("🧬 TITAN PROTOCOL")
-# Il selettore parte di default sul giorno di OGGI, ma puoi cambiarlo
 selected_day = st.selectbox("📅 Visualizza Piano del Giorno:", giorni_list, index=giorni_list.index(giorno_reale_ita))
+
+# --- GESTIONE IDRATAZIONE (NUOVO) ---
+if 'water_level' not in st.session_state:
+    st.session_state.water_level = 0.0
+
+# Reset automatico acqua se cambia giorno (simulato per semplicità, ideale con DB)
+if 'last_access_date' not in st.session_state:
+    st.session_state.last_access_date = today_date = datetime.now().day
+elif st.session_state.last_access_date != datetime.now().day:
+    st.session_state.water_level = 0.0 # Reset nuovo giorno
+    st.session_state.last_access_date = datetime.now().day
 
 # --- FILE SALVATAGGIO PESO ---
 FILE_DATI = "progressi_peso.csv"
@@ -29,14 +61,17 @@ if not os.path.exists(FILE_DATI):
     pd.DataFrame(columns=["Data", "Peso"]).to_csv(FILE_DATI, index=False)
 df_peso = pd.read_csv(FILE_DATI)
 
-# --- DATABASE DIETA ---
+# --- DEFINIZIONI STANDARD ---
+pancake_titan = "🥞 PANCAKE TITAN: 80g Farina Avena + 200ml Albume + 1 Banana + 10g Noci"
+colazione_veloce = "🥣 BOWL VELOCE: 150g Yogurt Greco 0% (o 30g Whey) + 4 Fette Biscottate + 1 Frutto"
+
+# --- DATABASE DIETA (CON KCAL TOTALI) ---
 diet_plan = {
     "Lunedì": {
         "Type": "GYM A",
-        "Colazione": ("80g Avena + 200ml Albume + 1 Banana + 10g Noci", 
-                      "Alt: 4 Fette Biscottate + 30g Whey o 150g Yogurt Greco"),
-        "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", 
-                         "Alt: 1 Frutto + 15g Frutta Secca"),
+        "Kcal": "2850",
+        "Colazione": (pancake_titan, colazione_veloce),
+        "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: 1 Frutto + 15g Frutta Secca"),
         "Pranzo": ("120g Riso Basmati + 150g Pollo + Zucchine + Olio", 
                    "Alt: 400g Patate / 100g Pasta Riso + 200g Pesce Bianco"),
         "Spuntino_Pom": ("4 Gallette Riso + 60g Fesa Tacchino", 
@@ -46,8 +81,8 @@ diet_plan = {
     },
     "Martedì": {
         "Type": "REST",
-        "Colazione": ("4 Fette Biscottate + 150g Yogurt Greco + Banana + Noci", 
-                      "Alt: Pancake (80g Avena + 150ml Albume)"),
+        "Kcal": "2600 (Low Carb)",
+        "Colazione": (colazione_veloce, pancake_titan),
         "Spuntino_Mat": ("1 Frutto + 15g Mandorle", "Alt: 1 Yogurt Greco"),
         "Pranzo": ("100g Pasta Integrale + 110g Tonno + Fagiolini", 
                    "Alt: 100g Farro + 150g Sgombro/Salmone"),
@@ -57,8 +92,9 @@ diet_plan = {
     },
     "Mercoledì": {
         "Type": "GYM B",
-        "Colazione": ("Cream of Rice (100g) + 30g Whey + 10g Cioccolato", 
-                      "Alt: 80g Avena + 200ml Albume"),
+        "Kcal": "2850",
+        "Colazione": ("🥣 CREAM OF RICE: 100g Crema di Riso + 30g Whey + 10g Cioccolato", 
+                      "Alt: " + pancake_titan),
         "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: Shake Proteico"),
         "Pranzo": ("120g Riso + 150g Tacchino + Finocchi", 
                    "Alt: 400g Patate + 150g Vitello"),
@@ -68,8 +104,9 @@ diet_plan = {
     },
     "Giovedì": {
         "Type": "REST",
-        "Colazione": ("100g Avena + 200g Yogurt Greco + Frutti Bosco", 
-                      "Alt: 5 Fette Biscottate + 30g Whey"),
+        "Kcal": "2600 (Low Carb)",
+        "Colazione": ("🥣 YOGURT BOWL: 200g Yogurt Greco + 80g Avena + Frutti Bosco", 
+                      "Alt: 5 Fette Biscottate + 30g Whey + Noci"),
         "Spuntino_Mat": ("1 Frutto + 15g Noci", "Alt: Barretta Proteica"),
         "Pranzo": ("80g Farro/Orzo + 150g Legumi + Verdure", 
                    "Alt: 80g Pasta Integrale + 2 Uova Sode"),
@@ -79,7 +116,8 @@ diet_plan = {
     },
     "Venerdì": {
         "Type": "GYM A",
-        "Colazione": ("80g Avena + 200ml Albume + Banana", "Alt: Pancake Proteici"),
+        "Kcal": "2900 (Carico)",
+        "Colazione": (pancake_titan, colazione_veloce),
         "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: Yogurt Greco"),
         "Pranzo": ("120g Riso Basmati + 200g Orata + Carote", 
                    "Alt: 400g Patate + 150g Pollo"),
@@ -89,7 +127,8 @@ diet_plan = {
     },
     "Sabato": {
         "Type": "CALCETTO",
-        "Colazione": ("Pancake (80g Farina + 150ml Albume) + Marmellata", "Alt: Fette Biscottate + Miele + Whey"),
+        "Kcal": "Variabile (Match Day)",
+        "Colazione": (pancake_titan, "Alt: Fette Biscottate + Miele + Whey"),
         "Spuntino_Mat": ("1 Frutto + 15g Noci", "-"),
         "Pranzo": ("NO FIBRE: 120g Riso Bianco + 100g Pollo", "Alt: 120g Pasta in bianco + 100g Tacchino"),
         "Spuntino_Pom": ("MATCH DAY: Solo acqua o banana pre-partita", "-"),
@@ -97,7 +136,8 @@ diet_plan = {
     },
     "Domenica": {
         "Type": "REST",
-        "Colazione": ("Fette Biscottate + Miele + Albume strapazzato", "Alt: Yogurt Greco + Frutta + Avena"),
+        "Kcal": "Variabile (Detox)",
+        "Colazione": ("🍞 CLASSICA: 5 Fette Biscottate + Miele + Albume strapazzato", "Alt: Yogurt Greco + Frutta + Avena"),
         "Spuntino_Mat": ("1 Frutto", "-"),
         "Pranzo": ("LIBERO MODERATO: Lasagna o Riso al forno", "Alt: Pasta al ragù"),
         "Spuntino_Pom": ("Yogurt o Frutto", "-"),
@@ -124,9 +164,35 @@ scheda_b_raw = {
     "Carico (kg)": [0.0]*7
 }
 
-# --- RECUPERO DATI GIORNO SELEZIONATO ---
 oggi_data = diet_plan[selected_day]
 tipo_oggi = oggi_data['Type']
+
+# ==========================================
+# 💧 TRACKER IDRATAZIONE (NUOVO)
+# ==========================================
+st.markdown("### 💧 IDRATAZIONE (Target: 3.5 Litri)")
+TARGET_ACQUA = 3.5
+
+# Visualizzazione Barra
+progresso_acqua = min(st.session_state.water_level / TARGET_ACQUA, 1.0)
+st.progress(progresso_acqua)
+
+col_w1, col_w2, col_w3 = st.columns([2, 1, 1])
+with col_w1:
+    st.write(f"**Bevuto oggi:** {st.session_state.water_level:.1f} / {TARGET_ACQUA} L")
+with col_w2:
+    if st.button("💧 +0.5L"):
+        st.session_state.water_level += 0.5
+        st.rerun()
+with col_w3:
+    if st.button("🗑️ Reset"):
+        st.session_state.water_level = 0.0
+        st.rerun()
+
+if st.session_state.water_level >= TARGET_ACQUA:
+    st.success("🏆 OBIETTIVO IDRATAZIONE RAGGIUNTO! I reni ringraziano.")
+
+st.divider()
 
 # ==========================================
 # 📈 SEZIONE PROGRESSI
@@ -138,7 +204,7 @@ with st.expander("📈 REGISTRO PESO & GRAFICO", expanded=False):
     with col_btn:
         st.write("") 
         st.write("") 
-        if st.button("Salva"):
+        if st.button("Salva Peso"):
             nuova_riga = pd.DataFrame({"Data": [oggi_data_breve], "Peso": [nuovo_peso]})
             df_peso = pd.concat([df_peso, nuova_riga], ignore_index=True)
             df_peso.to_csv(FILE_DATI, index=False)
@@ -154,7 +220,6 @@ with st.expander("📈 REGISTRO PESO & GRAFICO", expanded=False):
 st.header(f"🏋️ WAR ROOM: {tipo_oggi}")
 
 if "GYM" in tipo_oggi:
-    # Selezione Scheda in base al tipo di giornata
     df_active = pd.DataFrame(scheda_a_raw) if "GYM A" in tipo_oggi else pd.DataFrame(scheda_b_raw)
     
     st.info("Spunta le caselle quando completi l'esercizio.")
@@ -171,7 +236,6 @@ if "GYM" in tipo_oggi:
             "Carico (kg)": st.column_config.NumberColumn("Carico", min_value=0, max_value=200, step=0.5, format="%.1f kg")
         }
     )
-    # Barra Progresso
     fatti = edited_df["✅"].sum()
     totali = len(edited_df)
     progresso = fatti / totali
@@ -184,7 +248,7 @@ elif "CALCETTO" in tipo_oggi:
     st.warning("⚽ MATCH DAY (16:00)")
     st.markdown("""
     * **Pranzo:** Solo Riso e Pollo (Zero Fibre).
-    * **Acqua:** 1.5L prima del match.
+    * **Acqua:** Idratazione Extra Fondamentale.
     """)
 
 else:
@@ -198,22 +262,29 @@ st.header("🍽️ FUELING")
 
 def show_meal_box(title, data, icon):
     st.markdown(f"#### {icon} {title}")
-    st.info(f"**{data[0]}**") # Opzione principale
+    st.info(f"**{data[0]}**") 
     if data[1] != "-":
-        st.caption(f"🔄 *Oppure: {data[1]}*") # Alternativa
-    st.write("---") # Separatore visivo
+        st.caption(f"🔄 *Oppure: {data[1]}*") 
+    st.write("---") 
 
-# SEQUENZA ORDINATA
 show_meal_box("1. COLAZIONE (07:00-08:00)", oggi_data['Colazione'], "🥞")
 show_meal_box("2. SPUNTINO MATTINA (10:30)", oggi_data['Spuntino_Mat'], "🍏")
 show_meal_box("3. PRANZO (13:00-14:00)", oggi_data['Pranzo'], "🍚")
 show_meal_box("4. MERENDA POMERIGGIO (16:30)", oggi_data['Spuntino_Pom'], "🥪")
 show_meal_box("5. CENA (Post-WO/Relax)", oggi_data['Cena'], "🌙")
 
+# --- CALORIE TOTALI (NUOVO) ---
+st.markdown(f"""
+<div class="kcal-box">
+    🔥 OBIETTIVO CALORICO GIORNALIERO: {oggi_data['Kcal']} Kcal
+</div>
+""", unsafe_allow_html=True)
+
 # ==========================================
 # 🔄 TABELLA SOSTITUZIONI
 # ==========================================
-with st.expander("📚 TABELLA SOSTITUZIONI (Consultare se necessario)"):
+st.write("")
+with st.expander("📚 TABELLA SOSTITUZIONI"):
     sostituzioni = {
         "Fonti Carboidrati": {
             "Riso (120g)": ["400g Patate", "100g Pasta/Farro", "120g Avena", "120g Gallette"],
