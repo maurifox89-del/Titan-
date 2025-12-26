@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# --- CONFIGURAZIONE ---
-st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="mobile")
+# --- CONFIGURAZIONE (CORRETTA) ---
+# Streamlit accetta solo "centered" o "wide". 
+# "Centered" è perfetto per lo smartphone.
+st.set_page_config(page_title="Titan Protocol", page_icon="🧬", layout="centered")
 
 # --- INIZIALIZZAZIONE DATI (SIMULAZIONE DATABASE) ---
-# Qui salviamo i dati della "Settimana Scorsa" fittizi per iniziare. 
-# Man mano che userai l'app, potremo collegarla a un foglio Google per salvare davvero.
+if 'history_a' not in st.session_state:
+    # ... il resto del codice rimane uguale ...
 if 'history_a' not in st.session_state:
     st.session_state['history_a'] = {
         "Goblet Squat": 20.0,
