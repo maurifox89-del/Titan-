@@ -37,36 +37,94 @@ selected_day = st.selectbox("📅 Visualizza Piano del Giorno:", giorni_list, in
 FILE_PESO = "progressi_peso.csv"
 FILE_ESERCIZI = "storico_esercizi.csv"
 
-# Inizializza File Peso
 if not os.path.exists(FILE_PESO):
     pd.DataFrame(columns=["Data", "Peso"]).to_csv(FILE_PESO, index=False)
 df_peso = pd.read_csv(FILE_PESO)
 
-# Inizializza File Esercizi
 if not os.path.exists(FILE_ESERCIZI):
     pd.DataFrame(columns=["Data", "Esercizio", "Carico", "Reps"]).to_csv(FILE_ESERCIZI, index=False)
 df_esercizi = pd.read_csv(FILE_ESERCIZI)
 
 # --- IDRATAZIONE ---
 if 'water_level' not in st.session_state: st.session_state.water_level = 0.0
-# Reset giornaliero simulato
 if 'last_access' not in st.session_state: st.session_state.last_access = datetime.now().day
 if st.session_state.last_access != datetime.now().day:
     st.session_state.water_level = 0.0
     st.session_state.last_access = datetime.now().day
 
-# --- DEFINIZIONI DIETA ---
-pancake = "🥞 PANCAKE TITAN: 80g Farina Avena + 200ml Albume + 1 Banana + 10g Noci"
-bowl = "🥣 BOWL VELOCE: 150g Yogurt Greco 0% + 4 Fette Biscottate + 1 Frutto"
+# --- DEFINIZIONI COLAZIONI ---
+pancake = "🥞 PANCAKE: 80g Farina Avena + 200ml Albume + 1 Banana + 10g Noci"
+bowl = "🥣 BOWL: 150g Yogurt Greco + 4 Fette Bisc. + Frutto"
+shake = "🥤 SHAKE (Liquid): 300ml Acqua/Latte + 30g Whey + 80g Avena Istantanea + 1 Banana + 15g Burro Arachidi"
 
+# --- LOGICA SABATO DINAMICO ---
+is_match_day = True 
+if selected_day == "Sabato":
+    st.write("---")
+    col_check, col_void = st.columns([2,1])
+    with col_check:
+        mode = st.radio("⚽ Hai la partita oggi?", ["SÌ, MATCH DAY", "NO, RIPOSO"], horizontal=True)
+        is_match_day = True if mode == "SÌ, MATCH DAY" else False
+
+# --- DIET PLAN (BUDGET FRIENDLY: TONNO/SGOMBRO/SALMONE) ---
 diet_plan = {
-    "Lunedì": {"Type": "GYM A", "Kcal": "2850", "Colazione": (pancake, bowl), "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: 15g Frutta Secca"), "Pranzo": ("120g Riso + 150g Pollo + Zucchine", "Alt: 400g Patate + Pesce"), "Spuntino_Pom": ("4 Gallette + 60g Fesa", "Alt: Banana + Whey"), "Cena": ("POST-WO: 400g Patate + 150g Manzo + Spinaci", "Alt: 120g Riso + Cavallo")},
-    "Martedì": {"Type": "REST", "Kcal": "2600", "Colazione": (bowl, pancake), "Spuntino_Mat": ("1 Frutto + 15g Mandorle", "Alt: Yogurt"), "Pranzo": ("100g Pasta Int. + 110g Tonno + Fagiolini", "Alt: Farro + Sgombro"), "Spuntino_Pom": ("Yogurt + 10 Mandorle", "Alt: Frutto + Parmigiano"), "Cena": ("LOW CARB: 200g Patate + 200g Merluzzo + Carote", "Alt: 60g Pane + Pollo")},
-    "Mercoledì": {"Type": "GYM B", "Kcal": "2850", "Colazione": ("Cream Rice + Whey", "Alt: " + pancake), "Spuntino_Mat": ("Frutto + Parmigiano", "-"), "Pranzo": ("120g Riso + 150g Tacchino + Finocchi", "Alt: Patate + Vitello"), "Spuntino_Pom": ("4 Gallette + Bresaola", "Alt: Banana + Whey"), "Cena": ("POST-WO: 120g Riso Venere + 150g Salmone", "Alt: Patate Dolci + Manzo")},
-    "Giovedì": {"Type": "REST", "Kcal": "2600", "Colazione": ("Yogurt Bowl + Avena", "Alt: Fette Bisc + Whey"), "Spuntino_Mat": ("Frutto + Noci", "-"), "Pranzo": ("80g Farro + 150g Legumi", "Alt: Pasta + Uova"), "Spuntino_Pom": ("Yogurt + Pera", "-"), "Cena": ("Frittata (2 Uova) + 80g Pane", "Alt: Pesce + Patate")},
-    "Venerdì": {"Type": "GYM A", "Kcal": "2900", "Colazione": (pancake, bowl), "Spuntino_Mat": ("Frutto + Parmigiano", "-"), "Pranzo": ("120g Riso + 200g Orata", "Alt: Patate + Pollo"), "Spuntino_Pom": ("4 Gallette + Fesa", "-"), "Cena": ("PRE-MATCH: 120g Pasta + 150g Pollo", "Alt: Riso + Merluzzo")},
-    "Sabato": {"Type": "CALCETTO", "Kcal": "Match Day", "Colazione": (pancake, "-"), "Spuntino_Mat": ("Frutto + Noci", "-"), "Pranzo": ("NO FIBRE: 120g Riso Bianco + 100g Pollo", "-"), "Spuntino_Pom": ("Banana Pre-Match", "-"), "Cena": ("PIZZA / LIBERO", "-")},
-    "Domenica": {"Type": "REST", "Kcal": "Detox", "Colazione": ("Fette Bisc + Miele + Albume", "-"), "Spuntino_Mat": ("Frutto", "-"), "Pranzo": ("LIBERO MODERATO", "-"), "Spuntino_Pom": ("Yogurt", "-"), "Cena": ("Passato Verdure + Nasello", "-")}
+    "Lunedì": {
+        "Type": "GYM A", "Kcal": "2850", 
+        "Colazione": (pancake, "Alt: " + shake),
+        "Spuntino_Mat": ("1 Frutto + 20g Parmigiano", "Alt: 15g Frutta Secca"), 
+        "Pranzo": ("120g Riso + 150g Pollo + Zucchine", "Alt: 400g Patate + 112g Tonno (2 scatolette)"), 
+        "Spuntino_Pom": ("4 Gallette + 60g Fesa", "Alt: Banana + Whey"), 
+        "Cena": ("POST-WO: 400g Patate + 150g Manzo + Spinaci", "Alt: 120g Riso + 100g Salmone Affumicato")
+    },
+    "Martedì": {
+        "Type": "REST", "Kcal": "2600", 
+        "Colazione": (bowl, "Alt: " + shake),
+        "Spuntino_Mat": ("1 Frutto + 15g Mandorle", "Alt: Yogurt"), 
+        "Pranzo": ("100g Pasta Int. + 112g Tonno (sgocciolato) + Fagiolini", "Alt: Farro + 125g Sgombro"), 
+        "Spuntino_Pom": ("Yogurt + 10 Mandorle", "Alt: Frutto + Parmigiano"), 
+        "Cena": ("LOW CARB: 200g Patate + 125g Sgombro al Naturale", "Alt: 60g Pane + 100g Salmone Affumicato")
+    },
+    "Mercoledì": {
+        "Type": "GYM B", "Kcal": "2850", 
+        "Colazione": (shake, "Alt: " + pancake),
+        "Spuntino_Mat": ("Frutto + Parmigiano", "-"), 
+        "Pranzo": ("120g Riso + 150g Tacchino + Finocchi", "Alt: Patate + 112g Tonno"), 
+        "Spuntino_Pom": ("4 Gallette + Bresaola", "Alt: Banana + Whey"), 
+        "Cena": ("POST-WO: 120g Riso Venere + 100g Salmone Affumicato + Zucchine", "Alt: Patate Dolci + Manzo")
+    },
+    "Giovedì": {
+        "Type": "REST", "Kcal": "2600", 
+        "Colazione": (bowl, "Alt: " + shake), 
+        "Spuntino_Mat": ("Frutto + Noci", "-"), 
+        "Pranzo": ("80g Farro + 150g Legumi", "Alt: Pasta + 2 Uova"), 
+        "Spuntino_Pom": ("Yogurt + Pera", "-"), 
+        "Cena": ("Frittata (2 Uova) + 80g Pane", "Alt: 112g Tonno + Patate")
+    },
+    "Venerdì": {
+        "Type": "GYM A", "Kcal": "2900", 
+        "Colazione": (pancake, "Alt: " + shake), 
+        "Spuntino_Mat": ("Frutto + Parmigiano", "-"), 
+        "Pranzo": ("120g Riso Basmati + 125g Sgombro (Scatola) + Carote", "Alt: 400g Patate + 100g Salmone Affumicato"), 
+        "Spuntino_Pom": ("4 Gallette + Fesa", "-"), 
+        "Cena": ("PRE-MATCH: 120g Pasta + 150g Pollo", "Alt: Riso + 112g Tonno")
+    },
+    "Sabato": {
+        "Type": "CALCETTO" if is_match_day else "REST", 
+        "Kcal": "Match Day" if is_match_day else "2600",
+        "Colazione": (pancake, "Alt: " + shake),
+        "Spuntino_Mat": ("Frutto + Noci", "-"),
+        "Pranzo": ("NO FIBRE: 120g Riso Bianco + 100g Pollo" if is_match_day else "120g Riso + 112g Tonno + Verdure", "Alt: Pasta in bianco + Tonno"), 
+        "Spuntino_Pom": ("Banana Pre-Match" if is_match_day else "Yogurt + Noci", "-"), 
+        "Cena": ("PIZZA / LIBERO", "-")
+    },
+    "Domenica": {
+        "Type": "REST", "Kcal": "Detox", 
+        "Colazione": ("Fette Bisc + Miele + Albume", "Alt: " + shake), 
+        "Spuntino_Mat": ("Frutto", "-"), 
+        "Pranzo": ("LIBERO MODERATO", "-"), 
+        "Spuntino_Pom": ("Yogurt", "-"), 
+        "Cena": ("Passato Verdure + 100g Salmone Affumicato (o Tonno)", "-")
+    }
 }
 
 oggi_data = diet_plan[selected_day]
@@ -87,7 +145,6 @@ st.divider()
 # ⚖️ PESO CORPOREO (SOLO LUNEDÌ)
 # ==========================================
 with st.expander("⚖️ PESO CORPOREO & PROGRESSI", expanded=(giorno_reale_ita == "Lunedì")):
-    # 1. VISUALIZZAZIONE INPUT (Solo se è Lunedì reale)
     if giorno_reale_ita == "Lunedì":
         st.info("📅 È Lunedì. Giorno di Check-In.")
         c1, c2 = st.columns([2,1])
@@ -104,17 +161,15 @@ with st.expander("⚖️ PESO CORPOREO & PROGRESSI", expanded=(giorno_reale_ita 
     else:
         st.write(f"📅 Oggi è {giorno_reale_ita}. Il check del peso è attivo solo di Lunedì.")
 
-    # 2. GRAFICO (Sempre visibile)
     if not df_peso.empty:
         st.line_chart(df_peso.set_index("Data"))
         st.caption(f"Ultimo peso: {df_peso.iloc[-1]['Peso']} kg")
 
 # ==========================================
-# 🏋️ WAR ROOM & STORICO ESERCIZI
+# 🏋️ WAR ROOM
 # ==========================================
 st.header(f"🏋️ WAR ROOM: {tipo_oggi}")
 
-# DEFINIZIONE SCHEDE
 scheda_a_raw = {
     "✅": [False]*6,
     "Esercizio": ["Goblet Squat", "Rematore Manubrio", "Panca Inclinata", "Lat Machine", "Face Pull", "Plank"],
@@ -133,12 +188,9 @@ scheda_b_raw = {
 }
 
 if "GYM" in tipo_oggi:
-    # 1. TABELLA ALLENAMENTO
     df_active = pd.DataFrame(scheda_a_raw) if "GYM A" in tipo_oggi else pd.DataFrame(scheda_b_raw)
+    st.info("Inserisci i carichi e spunta ✅ quando hai finito.")
     
-    st.info("Inserisci i carichi e spunta ✅ quando hai finito l'esercizio.")
-    
-    # Editor Dati
     edited_df = st.data_editor(
         df_active,
         hide_index=True,
@@ -151,20 +203,14 @@ if "GYM" in tipo_oggi:
         }
     )
 
-    # 2. SALVATAGGIO SESSIONE (CODICE CORRETTO)
     col_save, col_info = st.columns([1, 1])
     with col_save:
         if st.button("💾 SALVA SESSIONE COMPLETA"):
-            # Filtra solo le righe spuntate ✅
             completed_exercises = edited_df[edited_df["✅"] == True]
-            
             if not completed_exercises.empty:
                 new_records = []
-                # Prendiamo la data corrente qui per evitare errori di sintassi
                 today_date_str = datetime.now().strftime("%Y-%m-%d")
-                
                 for index, row in completed_exercises.iterrows():
-                    # Ignora se carico è 0
                     if row["Carico (kg)"] > 0:
                         new_records.append({
                             "Data": today_date_str,
@@ -172,39 +218,33 @@ if "GYM" in tipo_oggi:
                             "Carico": row["Carico (kg)"],
                             "Reps": row["Set x Reps"] 
                         })
-                
                 if new_records:
                     df_new = pd.DataFrame(new_records)
                     df_esercizi = pd.concat([df_esercizi, df_new], ignore_index=True)
                     df_esercizi.to_csv(FILE_ESERCIZI, index=False)
                     st.toast(f"Salvato storico per {len(new_records)} esercizi!", icon="🦍")
                 else:
-                    st.warning("Hai spuntato gli esercizi ma non hai inserito il carico (>0).")
+                    st.warning("Hai spuntato ma carico = 0.")
             else:
-                st.warning("Spunta almeno un esercizio fatto prima di salvare.")
+                st.warning("Spunta almeno un esercizio.")
 
-    # 3. ANALISI STORICO CARICHI
     st.write("")
     with st.expander("📈 VEDI STORICO ESERCIZIO (Grafico)", expanded=False):
-        # Lista unica di esercizi presenti nel file storico
         if not df_esercizi.empty:
             lista_es = df_esercizi["Esercizio"].unique()
             if len(lista_es) > 0:
-                scelta_es = st.selectbox("Seleziona Esercizio da analizzare:", lista_es)
-                
-                # Filtra dati
+                scelta_es = st.selectbox("Seleziona Esercizio:", lista_es)
                 dati_es = df_esercizi[df_esercizi["Esercizio"] == scelta_es]
-                
                 if not dati_es.empty:
                     st.line_chart(dati_es.set_index("Data")["Carico"])
                     ult_carico = dati_es.iloc[-1]["Carico"]
-                    st.caption(f"Ultimo carico registrato: **{ult_carico} kg**")
+                    st.caption(f"Ultimo carico: **{ult_carico} kg**")
                 else:
-                    st.write("Nessun dato per questo esercizio.")
+                    st.write("Nessun dato.")
             else:
-                 st.write("Nessun esercizio salvato finora.")
+                 st.write("Nessun esercizio salvato.")
         else:
-            st.write("Ancora nessun allenamento salvato nel database.")
+            st.write("Database vuoto.")
 
 elif "CALCETTO" in tipo_oggi:
     st.warning("⚽ MATCH DAY (16:00) - Focus Idratazione")
@@ -230,9 +270,8 @@ show_meal("CENA", oggi_data['Cena'], "🌙")
 
 st.markdown(f"<div class='kcal-box'>🔥 OBIETTIVO: {oggi_data['Kcal']} Kcal</div>", unsafe_allow_html=True)
 
-# TABELLA SOSTITUZIONI
-with st.expander("📚 SOSTITUZIONI"):
+with st.expander("📚 SOSTITUZIONI BUDGET"):
     st.table(pd.DataFrame({
         "Carbo": ["Riso 120g -> Patate 400g", "Pane 60g -> Gallette 50g"],
-        "Proteine": ["Pollo 150g -> Pesce 200g", "Manzo 150g -> Salmone 150g"]
+        "Proteine Economiche": ["Pesce Fresco 200g -> Tonno/Sgombro 112g (2 scat. piccole)", "Manzo 150g -> Salmone Affumicato 100g"]
     }))
